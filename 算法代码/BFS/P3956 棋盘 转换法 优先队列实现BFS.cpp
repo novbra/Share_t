@@ -30,12 +30,12 @@ void bfs(){
 		for(int i=0;i<12;i++){//懒惰删除 
 			nxt.x=cur.x+dx[i];
 			nxt.y=cur.y+dy[i];
-			nxt.w=cur.w+dw[i];
+			nxt.w=cur.w+dw[i];          // 暂且不考虑颜色 先把权重加起来
             if(nxt.x<=0||nxt.x>m||nxt.y<=0||nxt.y>m)continue;//保证在棋盘范围内
-			nxt.c=a[nxt.x][nxt.y];
-			if(!nxt.c)continue;
-			if(cur.c!=nxt.c)nxt.w++;//确定下一步的信息 
-			if(dis[nxt.x][nxt.y]>nxt.w){
+			nxt.c=a[nxt.x][nxt.y];      // nxt
+			if(!nxt.c)continue; //由于转化了，最终落脚点不能是无色
+			if(cur.c!=nxt.c)nxt.w++;//异色+1，确定下一步的信息 
+			if(dis[nxt.x][nxt.y]>nxt.w){//选优
 				dis[nxt.x][nxt.y]=nxt.w;
 				q.push(nxt);
 			}
@@ -47,7 +47,7 @@ int main(){
 	read(m);read(n);
 	for(int i=1;i<=n;i++){
 		read(x);read(y);read(c);
-		a[x][y]=c+1;
+		a[x][y]=c+1;  //无色0 红1 黄2
 	}//这里c+1，为了方便区分无色格子 
 	bfs();
 	if(!a[m][m]){//处理(m,m)无色情况 
