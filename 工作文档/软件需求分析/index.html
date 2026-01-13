@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新能源汽车舆情分析系统 - 仪表盘</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        accent: '#0ea5e9',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        neutral: '#f1f5f9',
+                        'neutral-dark': '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .transition-all-300 {
+                transition: all 300ms ease-in-out;
+            }
+            .sidebar-active {
+                @apply bg-secondary text-white;
+            }
+            .sidebar-icon {
+                @apply mr-3 text-lg;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="flex items-center justify-between px-4 py-3">
+            <!-- 左侧Logo和标题 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-primary focus:outline-none">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center">
+                    <img src="https://p3-doubao-search-sign.byteimg.com/labis/97275f7dbcab7d29338c0f8d5e81b820~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1779511019&x-signature=S8QuGT9saJ1zXQ4CfOvu5tk%2Bbpg%3D" alt="Logo" class="h-10 w-10 rounded-full">
+                    <h1 class="ml-2 text-xl font-bold text-primary hidden sm:block">新能源汽车舆情分析系统</h1>
+                </div>
+            </div>
+
+            <!-- 中间搜索栏 -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-4">
+                <div class="relative w-full">
+                    <input type="text" placeholder="搜索舆情信息、关键词..." 
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                        <i class="fa fa-search"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- 右侧用户菜单 -->
+            <div class="flex items-center space-x-4">
+                <!-- 通知图标 -->
+                <button class="relative text-gray-600 hover:text-primary focus:outline-none">
+                    <i class="fa fa-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                </button>
+
+                <!-- 用户下拉菜单 -->
+                <div class="relative">
+                    <button id="userMenuButton" class="flex items-center space-x-2 focus:outline-none">
+                        <div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <span class="hidden md:block text-gray-700">管理员</span>
+                        <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                    </button>
+
+                    <!-- 用户下拉菜单内容 -->
+                    <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 hidden">
+                        <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-user-circle mr-2"></i>个人资料
+                        </a>
+                        <a href="settings.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-cog mr-2"></i>设置
+                        </a>
+                        <div class="border-t border-gray-100 my-1"></div>
+                        <a href="login.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-sign-out mr-2"></i>退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="bg-white shadow-sm w-64 flex-shrink-0 hidden lg:block transition-all duration-300 ease-in-out">
+            <nav class="mt-5 px-2">
+                <div class="space-y-1">
+                    <!-- 仪表盘 -->
+                    <a href="index.html" class="sidebar-active group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-dashboard sidebar-icon"></i>
+                        仪表盘
+                    </a>
+
+                    <!-- 情感分析 -->
+                    <a href="sentiment.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-heart sidebar-icon"></i>
+                        情感分析
+                    </a>
+
+                    <!-- 主题建模 -->
+                    <a href="topic.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-tags sidebar-icon"></i>
+                        主题建模
+                    </a>
+
+                    <!-- 报告生成 -->
+                    <a href="#report" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-file-text sidebar-icon"></i>
+                        报告生成
+                    </a>
+
+                    <!-- 搜索与查询 -->
+                    <a href="#search" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-search sidebar-icon"></i>
+                        搜索与查询
+                    </a>
+
+                    <!-- 数据采集配置 (管理员专属) -->
+                    <a href="data-collection.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-cogs sidebar-icon"></i>
+                        数据采集配置
+                        <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">管理员</span>
+                    </a>
+
+                    <!-- 用户管理 (管理员专属) -->
+                    <a href="user-management.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-users sidebar-icon"></i>
+                        用户管理
+                        <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">管理员</span>
+                    </a>
+
+                    <!-- 系统设置 -->
+                    <a href="settings.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-sliders sidebar-icon"></i>
+                        系统设置
+                    </a>
+                </div>
+
+                <!-- 数据源状态 -->
+                <div class="mt-8">
+                    <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        数据源状态
+                    </h3>
+                    <div class="mt-2 space-y-1">
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            微博API
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            微信公众平台
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500 mr-3"></span>
+                            新闻RSS
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-red-500 mr-3"></span>
+                            论坛数据
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            视频平台评论
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
+            <!-- 面包屑导航 -->
+            <div class="flex items-center text-sm text-gray-600 mb-6">
+                <a href="#" class="hover:text-primary">首页</a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-800">仪表盘</span>
+            </div>
+
+            <!-- 页面标题 -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">仪表盘</h2>
+                <div class="mt-4 md:mt-0 flex items-center space-x-3">
+                    <!-- 时间范围选择 -->
+                    <div class="relative">
+                        <select class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option>最近7天</option>
+                            <option>最近30天</option>
+                            <option>最近90天</option>
+                            <option>自定义</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fa fa-chevron-down"></i>
+                        </div>
+                    </div>
+
+                    <!-- 刷新按钮 -->
+                    <button class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary flex items-center">
+                        <i class="fa fa-refresh mr-2"></i>
+                        刷新数据
+                    </button>
+
+                    <!-- 报告生成按钮 -->
+                    <button class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary flex items-center">
+                        <i class="fa fa-file-text mr-2"></i>
+                        生成报告
+                    </button>
+                </div>
+            </div>
+
+            <!-- 数据概览卡片 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- 总舆情数量 -->
+                <div class="bg-white rounded-lg shadow-card p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-blue-100 rounded-full p-3">
+                            <i class="fa fa-comments text-primary text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">总舆情数量</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">12,458</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                        <i class="fa fa-arrow-up"></i>
+                                        <span class="sr-only">增加</span>
+                                        12%
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 正面情感占比 -->
+                <div class="bg-white rounded-lg shadow-card p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-green-100 rounded-full p-3">
+                            <i class="fa fa-thumbs-up text-success text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">正面情感占比</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">68.5%</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                        <i class="fa fa-arrow-up"></i>
+                                        <span class="sr-only">增加</span>
+                                        3.2%
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 负面情感占比 -->
+                <div class="bg-white rounded-lg shadow-card p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-red-100 rounded-full p-3">
+                            <i class="fa fa-thumbs-down text-danger text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">负面情感占比</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">12.3%</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-red-600">
+                                        <i class="fa fa-arrow-down"></i>
+                                        <span class="sr-only">减少</span>
+                                        1.8%
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 热点话题数量 -->
+                <div class="bg-white rounded-lg shadow-card p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-yellow-100 rounded-full p-3">
+                            <i class="fa fa-fire text-warning text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">热点话题数量</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">24</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                        <i class="fa fa-arrow-up"></i>
+                                        <span class="sr-only">增加</span>
+                                        5
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- 情感分布饼图 -->
+                <div class="bg-white rounded-lg shadow-card p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-medium text-gray-800">情感分布</h3>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-500 hover:text-primary focus:outline-none">
+                                <i class="fa fa-download"></i>
+                            </button>
+                            <button class="text-gray-500 hover:text-primary focus:outline-none">
+                                <i class="fa fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="sentimentDistributionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 舆情趋势折线图 -->
+                <div class="bg-white rounded-lg shadow-card p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-medium text-gray-800">舆情趋势</h3>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-500 hover:text-primary focus:outline-none">
+                                <i class="fa fa-download"></i>
+                            </button>
+                            <button class="text-gray-500 hover:text-primary focus:outline-none">
+                                <i class="fa fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="opinionTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 热点话题和热门关键词 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 热点话题 -->
+                <div class="bg-white rounded-lg shadow-card p-6 lg:col-span-2">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-medium text-gray-800">热点话题</h3>
+                        <a href="#" class="text-sm text-primary hover:text-secondary">查看全部</a>
+                    </div>
+                    <div class="h-80">
+                        <canvas id="hotTopicsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 热门关键词 -->
+                <div class="bg-white rounded-lg shadow-card p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-medium text-gray-800">热门关键词</h3>
+                        <a href="#" class="text-sm text-primary hover:text-secondary">查看全部</a>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded mr-3">1</span>
+                            <span class="text-gray-800 font-medium">续航里程</span>
+                            <span class="ml-auto text-gray-500 text-sm">出现频次: 1,245</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded mr-3">2</span>
+                            <span class="text-gray-800 font-medium">充电速度</span>
+                            <span class="ml-auto text-gray-500 text-sm">出现频次: 987</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded mr-3">3</span>
+                            <span class="text-gray-800 font-medium">智能驾驶</span>
+                            <span class="ml-auto text-gray-500 text-sm">出现频次: 876</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded mr-3">4</span>
+                            <span class="text-gray-800 font-medium">电池安全</span>
+                            <span class="ml-auto text-gray-500 text-sm">出现频次: 765</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded mr-3">5</span>
+                            <span class="text-gray-800 font-medium">价格竞争</span>
+                            <span class="ml-auto text-gray-500 text-sm">出现频次: 654</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded mr-3">6</span>
+                            <span class="text-gray-800 font-medium">充电基础设施</span>
+                            <span class="ml-auto text-gray-500 text-sm">出现频次: 543</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded mr-3">7</span>
+                            <span class="text-gray-800 font-medium">车辆设计</span>
+                            <span class="ml-auto text-gray-500 text-sm">出现频次: 432</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded mr-3">8</span>
+                            <span class="text-gray-800 font-medium">售后服务</span>
+                            <span class="ml-auto text-gray-500 text-sm">出现频次: 321</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-4">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-500">
+                    © 2025 新能源汽车舆情分析系统. 保留所有权利.
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                        <span class="sr-only">帮助中心</span>
+                        <i class="fa fa-question-circle"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                        <span class="sr-only">设置</span>
+                        <i class="fa fa-cog"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                        <span class="sr-only">联系我们</span>
+                        <i class="fa fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 移动端搜索栏 -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10">
+        <div class="relative">
+            <input type="text" placeholder="搜索舆情信息、关键词..." 
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                <i class="fa fa-search"></i>
+            </span>
+        </div>
+    </div>
+
+    <!-- 报告生成模态框 -->
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">生成报告</h2>
+                <button id="closeReportModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="reportForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 报告标题 -->
+                    <div class="md:col-span-2">
+                        <label for="reportTitle" class="block text-sm font-medium text-gray-700 mb-1">报告标题</label>
+                        <input type="text" id="reportTitle" name="reportTitle" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                            placeholder="请输入报告标题">
+                    </div>
+
+                    <!-- 时间范围 -->
+                    <div>
+                        <label for="timeRange" class="block text-sm font-medium text-gray-700 mb-1">时间范围</label>
+                        <select id="timeRange" name="timeRange" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                            <option>最近7天</option>
+                            <option>最近30天</option>
+                            <option>最近90天</option>
+                            <option>自定义</option>
+                        </select>
+                    </div>
+
+                    <!-- 数据维度 -->
+                    <div>
+                        <label for="dataDimension" class="block text-sm font-medium text-gray-700 mb-1">数据维度</label>
+                        <select id="dataDimension" name="dataDimension" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                            <option>全部维度</option>
+                            <option>情感分析</option>
+                            <option>主题建模</option>
+                            <option>舆情趋势</option>
+                        </select>
+                    </div>
+
+                    <!-- 数据源选择 -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">数据源选择</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="sourceWeibo" name="sourceWeibo" checked 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                <label for="sourceWeibo" class="ml-2 block text-sm text-gray-700">微博</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="sourceWechat" name="sourceWechat" checked 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                <label for="sourceWechat" class="ml-2 block text-sm text-gray-700">微信</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="sourceNews" name="sourceNews" checked 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                <label for="sourceNews" class="ml-2 block text-sm text-gray-700">新闻</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="sourceForum" name="sourceForum" 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                <label for="sourceForum" class="ml-2 block text-sm text-gray-700">论坛</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="sourceVideo" name="sourceVideo" checked 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                <label for="sourceVideo" class="ml-2 block text-sm text-gray-700">视频平台</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 导出格式 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">导出格式</label>
+                        <div class="flex space-x-4">
+                            <div class="flex items-center">
+                                <input type="radio" id="formatPDF" name="format" value="pdf" checked 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <label for="formatPDF" class="ml-2 block text-sm text-gray-700">PDF</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="radio" id="formatExcel" name="format" value="excel" 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <label for="formatExcel" class="ml-2 block text-sm text-gray-700">Excel</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="radio" id="formatPPT" name="format" value="ppt" 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <label for="formatPPT" class="ml-2 block text-sm text-gray-700">PPT</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 报告类型 -->
+                    <div>
+                        <label for="reportType" class="block text-sm font-medium text-gray-700 mb-1">报告类型</label>
+                        <select id="reportType" name="reportType" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                            <option>简要报告</option>
+                            <option>详细报告</option>
+                            <option>自定义报告</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 报告描述 -->
+                <div>
+                    <label for="reportDescription" class="block text-sm font-medium text-gray-700 mb-1">报告描述</label>
+                    <textarea id="reportDescription" name="reportDescription" rows="3" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                        placeholder="请输入报告描述（选填）"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelReport" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                        取消
+                    </button>
+                    <button type="submit" id="generateReport" class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        生成报告
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 报告生成进度模态框 -->
+    <div id="reportProgressModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4 text-center">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">正在生成报告</h2>
+            <div class="mb-6">
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="reportProgress" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+                <p id="progressText" class="mt-2 text-sm text-gray-600">0%</p>
+            </div>
+            <p class="text-gray-600 mb-6">预计需要 30 秒，请稍候...</p>
+            <button id="cancelReportProgress" class="bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                取消
+            </button>
+        </div>
+    </div>
+
+    <!-- 报告生成成功模态框 -->
+    <div id="reportSuccessModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa fa-check text-green-500 text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">报告生成成功</h2>
+            <p class="text-gray-600 mb-6">您的报告已成功生成，点击下方按钮下载</p>
+            <div class="flex justify-center space-x-3">
+                <button id="viewReport" class="bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    查看报告
+                </button>
+                <button id="downloadReport" class="bg-primary text-white py-2 px-6 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    下载报告
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userMenu = document.getElementById('userMenu');
+        const reportModal = document.getElementById('reportModal');
+        const closeReportModal = document.getElementById('closeReportModal');
+        const cancelReport = document.getElementById('cancelReport');
+        const reportForm = document.getElementById('reportForm');
+        const generateReport = document.getElementById('generateReport');
+        const reportProgressModal = document.getElementById('reportProgressModal');
+        const reportProgress = document.getElementById('reportProgress');
+        const progressText = document.getElementById('progressText');
+        const cancelReportProgress = document.getElementById('cancelReportProgress');
+        const reportSuccessModal = document.getElementById('reportSuccessModal');
+        const viewReport = document.getElementById('viewReport');
+        const downloadReport = document.getElementById('downloadReport');
+
+        // 侧边栏切换
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+        });
+
+        // 用户菜单切换
+        userMenuButton.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+
+        // 点击页面其他地方关闭用户菜单
+        document.addEventListener('click', (e) => {
+            if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // 报告生成模态框控制
+        document.querySelector('button:has(.fa-file-text)').addEventListener('click', () => {
+            reportModal.classList.remove('hidden');
+        });
+
+        closeReportModal.addEventListener('click', () => {
+            reportModal.classList.add('hidden');
+        });
+
+        cancelReport.addEventListener('click', () => {
+            reportModal.classList.add('hidden');
+        });
+
+        // 报告生成处理
+        reportForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // 显示进度模态框
+            reportModal.classList.add('hidden');
+            reportProgressModal.classList.remove('hidden');
+            
+            // 模拟进度条
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                reportProgress.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        reportProgressModal.classList.add('hidden');
+                        reportSuccessModal.classList.remove('hidden');
+                    }, 500);
+                }
+            }, 150);
+        });
+
+        cancelReportProgress.addEventListener('click', () => {
+            reportProgressModal.classList.add('hidden');
+        });
+
+        // 报告成功处理
+        viewReport.addEventListener('click', () => {
+            reportSuccessModal.classList.add('hidden');
+            alert('查看报告功能即将上线');
+        });
+
+        downloadReport.addEventListener('click', () => {
+            reportSuccessModal.classList.add('hidden');
+            alert('报告已开始下载');
+        });
+
+        // 点击模态框外部关闭模态框
+        window.addEventListener('click', (e) => {
+            if (e.target === reportModal) {
+                reportModal.classList.add('hidden');
+            }
+            if (e.target === reportProgressModal) {
+                reportProgressModal.classList.add('hidden');
+            }
+            if (e.target === reportSuccessModal) {
+                reportSuccessModal.classList.add('hidden');
+            }
+        });
+
+        // 初始化图表
+        document.addEventListener('DOMContentLoaded', () => {
+            // 情感分布饼图
+            const sentimentCtx = document.getElementById('sentimentDistributionChart').getContext('2d');
+            const sentimentChart = new Chart(sentimentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['正面', '中性', '负面'],
+                    datasets: [{
+                        data: [68.5, 19.2, 12.3],
+                        backgroundColor: [
+                            '#10b981', // 绿色 - 正面
+                            '#3b82f6', // 蓝色 - 中性
+                            '#ef4444'  // 红色 - 负面
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // 舆情趋势折线图
+            const trendCtx = document.getElementById('opinionTrendChart').getContext('2d');
+            const trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
+                    datasets: [
+                        {
+                            label: '正面舆情',
+                            data: [1200, 1900, 2300, 2800, 3200, 3800, 4200],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '负面舆情',
+                            data: [800, 750, 680, 720, 650, 580, 520],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 热点话题柱状图
+            const topicsCtx = document.getElementById('hotTopicsChart').getContext('2d');
+            const topicsChart = new Chart(topicsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['续航里程', '充电速度', '智能驾驶', '电池安全', '价格竞争', '充电设施', '车辆设计', '售后服务'],
+                    datasets: [{
+                        label: '讨论热度',
+                        data: [1245, 987, 876, 765, 654, 543, 432, 321],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(59, 130, 246, 0.6)',
+                            'rgba(59, 130, 246, 0.5)',
+                            'rgba(59, 130, 246, 0.4)',
+                            'rgba(59, 130, 246, 0.3)',
+                            'rgba(59, 130, 246, 0.2)',
+                            'rgba(59, 130, 246, 0.1)'
+                        ],
+                        borderWidth: 0,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // 检查URL参数，确定用户角色
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role');
+        
+        if (role === 'user') {
+            // 隐藏管理员专属菜单
+            document.querySelectorAll('a:has(.fa-cogs), a:has(.fa-users)').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // 更新用户菜单显示
+            document.querySelector('#userMenuButton span.hidden').textContent = '普通用户';
+        }
+    </script>
+</body>
+</html>

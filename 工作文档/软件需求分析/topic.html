@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新能源汽车舆情分析系统 - 主题建模</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        accent: '#0ea5e9',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        neutral: '#f1f5f9',
+                        'neutral-dark': '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .transition-all-300 {
+                transition: all 300ms ease-in-out;
+            }
+            .sidebar-active {
+                @apply bg-secondary text-white;
+            }
+            .sidebar-icon {
+                @apply mr-3 text-lg;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1;
+            }
+            .topic-tag {
+                @apply px-3 py-1 rounded-full text-sm font-medium;
+            }
+            .topic-tag-popular {
+                @apply bg-red-100 text-red-800;
+            }
+            .topic-tag-new {
+                @apply bg-green-100 text-green-800;
+            }
+            .topic-tag-trending {
+                @apply bg-blue-100 text-blue-800;
+            }
+            .topic-tag-controversial {
+                @apply bg-yellow-100 text-yellow-800;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="flex items-center justify-between px-4 py-3">
+            <!-- 左侧Logo和标题 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-primary focus:outline-none">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center">
+                    <img src="https://p3-doubao-search-sign.byteimg.com/labis/97275f7dbcab7d29338c0f8d5e81b820~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1779511019&x-signature=S8QuGT9saJ1zXQ4CfOvu5tk%2Bbpg%3D" alt="Logo" class="h-10 w-10 rounded-full">
+                    <h1 class="ml-2 text-xl font-bold text-primary hidden sm:block">新能源汽车舆情分析系统</h1>
+                </div>
+            </div>
+
+            <!-- 中间搜索栏 -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-4">
+                <div class="relative w-full">
+                    <input type="text" placeholder="搜索舆情信息、关键词..." 
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                        <i class="fa fa-search"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- 右侧用户菜单 -->
+            <div class="flex items-center space-x-4">
+                <!-- 通知图标 -->
+                <button class="relative text-gray-600 hover:text-primary focus:outline-none">
+                    <i class="fa fa-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                </button>
+
+                <!-- 用户下拉菜单 -->
+                <div class="relative">
+                    <button id="userMenuButton" class="flex items-center space-x-2 focus:outline-none">
+                        <div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <span class="hidden md:block text-gray-700">管理员</span>
+                        <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                    </button>
+
+                    <!-- 用户下拉菜单内容 -->
+                    <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 hidden">
+                        <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-user-circle mr-2"></i>个人资料
+                        </a>
+                        <a href="settings.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-cog mr-2"></i>设置
+                        </a>
+                        <div class="border-t border-gray-100 my-1"></div>
+                        <a href="login.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-sign-out mr-2"></i>退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="bg-white shadow-sm w-64 flex-shrink-0 hidden lg:block transition-all duration-300 ease-in-out">
+            <nav class="mt-5 px-2">
+                <div class="space-y-1">
+                    <!-- 仪表盘 -->
+                    <a href="index.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-dashboard sidebar-icon"></i>
+                        仪表盘
+                    </a>
+
+                    <!-- 情感分析 -->
+                    <a href="sentiment.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-heart sidebar-icon"></i>
+                        情感分析
+                    </a>
+
+                    <!-- 主题建模 -->
+                    <a href="topic.html" class="sidebar-active group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-tags sidebar-icon"></i>
+                        主题建模
+                    </a>
+
+                    <!-- 报告生成 -->
+                    <a href="#report" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-file-text sidebar-icon"></i>
+                        报告生成
+                    </a>
+
+                    <!-- 搜索与查询 -->
+                    <a href="#search" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-search sidebar-icon"></i>
+                        搜索与查询
+                    </a>
+
+                    <!-- 数据采集配置 (管理员专属) -->
+                    <a href="data-collection.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-cogs sidebar-icon"></i>
+                        数据采集配置
+                        <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">管理员</span>
+                    </a>
+
+                    <!-- 用户管理 (管理员专属) -->
+                    <a href="user-management.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-users sidebar-icon"></i>
+                        用户管理
+                        <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">管理员</span>
+                    </a>
+
+                    <!-- 系统设置 -->
+                    <a href="settings.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-sliders sidebar-icon"></i>
+                        系统设置
+                    </a>
+                </div>
+
+                <!-- 数据源状态 -->
+                <div class="mt-8">
+                    <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        数据源状态
+                    </h3>
+                    <div class="mt-2 space-y-1">
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            微博API
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            微信公众平台
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500 mr-3"></span>
+                            新闻RSS
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-red-500 mr-3"></span>
+                            论坛数据
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            视频平台评论
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
+            <!-- 面包屑导航 -->
+            <div class="flex items-center text-sm text-gray-600 mb-6">
+                <a href="index.html" class="hover:text-primary">首页</a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-800">主题建模</span>
+            </div>
+
+            <!-- 页面标题 -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">主题建模</h2>
+                <div class="mt-4 md:mt-0 flex items-center space-x-3">
+                    <!-- 时间范围选择 -->
+                    <div class="relative">
+                        <select class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option>最近7天</option>
+                            <option>最近30天</option>
+                            <option>最近90天</option>
+                            <option>自定义</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fa fa-chevron-down"></i>
+                        </div>
+                    </div>
+
+                    <!-- 刷新按钮 -->
+                    <button class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary flex items-center">
+                        <i class="fa fa-refresh mr-2"></i>
+                        刷新数据
+                    </button>
+
+                    <!-- 导出按钮 -->
+                    <button id="exportTopicsBtn" class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary flex items-center">
+                        <i class="fa fa-download mr-2"></i>
+                        导出主题
+                    </button>
+                </div>
+            </div>
+
+            <!-- 主题概览卡片 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- 总主题数量 -->
+                <div class="bg-white rounded-lg shadow-card p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-blue-100 rounded-full p-3">
+                            <i class="fa fa-tags text-primary text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">总主题数量</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">24</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                        <i class="fa fa-arrow-up"></i>
+                                        <span class="sr-only">增加</span>
+                                        5
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 热门主题数量 -->
+                <div class="bg-white rounded-lg shadow-card p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-red-100 rounded-full p-3">
+                            <i class="fa fa-fire text-danger text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">热门主题数量</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">8</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                        <i class="fa fa-arrow-up"></i>
+                                        <span class="sr-only">增加</span>
+                                        2
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新兴主题数量 -->
+                <div class="bg-white rounded-lg shadow-card p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-green-100 rounded-full p-3">
+                            <i class="fa fa-line-chart text-success text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">新兴主题数量</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">5</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                        <i class="fa fa-arrow-up"></i>
+                                        <span class="sr-only">增加</span>
+                                        3
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 争议主题数量 -->
+                <div class="bg-white rounded-lg shadow-card p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-yellow-100 rounded-full p-3">
+                            <i class="fa fa-exclamation-triangle text-warning text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">争议主题数量</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">3</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-red-600">
+                                        <i class="fa fa-arrow-up"></i>
+                                        <span class="sr-only">增加</span>
+                                        1
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主题分析区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- 左侧主题列表 -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-card p-6 h-full">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-medium text-gray-800">热门主题列表</h3>
+                            <div class="flex items-center">
+                                <span class="text-xs text-gray-500 mr-2">排序:</span>
+                                <select class="text-sm border-none bg-transparent focus:outline-none focus:ring-0 text-gray-700">
+                                    <option>热度</option>
+                                    <option>时间</option>
+                                    <option>情感</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- 搜索框 -->
+                        <div class="relative mb-6">
+                            <input type="text" placeholder="搜索主题..." 
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        </div>
+                        
+                        <!-- 主题列表 -->
+                        <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                            <!-- 主题1 -->
+                            <div class="topic-item p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 cursor-pointer transition-all-300" data-topic="battery">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-medium text-gray-800">电池技术创新</h4>
+                                    <span class="topic-tag topic-tag-popular">热门</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">新一代固态电池技术取得突破，能量密度提升30%，充电时间缩短至15分钟</p>
+                                <div class="flex items-center mt-3 text-xs text-gray-500">
+                                    <span class="mr-3"><i class="fa fa-comment mr-1"></i> 1,245</span>
+                                    <span class="mr-3"><i class="fa fa-line-chart mr-1"></i> 上升</span>
+                                    <span><i class="fa fa-calendar mr-1"></i> 2天前</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 主题2 -->
+                            <div class="topic-item p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 cursor-pointer transition-all-300" data-topic="charging">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-medium text-gray-800">超快充技术</h4>
+                                    <span class="topic-tag topic-tag-trending">趋势</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">多家车企宣布采用800V高压平台，支持4C超快充，10分钟充电可行驶400公里</p>
+                                <div class="flex items-center mt-3 text-xs text-gray-500">
+                                    <span class="mr-3"><i class="fa fa-comment mr-1"></i> 987</span>
+                                    <span class="mr-3"><i class="fa fa-line-chart mr-1"></i> 上升</span>
+                                    <span><i class="fa fa-calendar mr-1"></i> 3天前</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 主题3 -->
+                            <div class="topic-item p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 cursor-pointer transition-all-300" data-topic="autonomous">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-medium text-gray-800">智能驾驶安全</h4>
+                                    <span class="topic-tag topic-tag-controversial">争议</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">某品牌自动驾驶系统在复杂路况下发生事故，引发公众对智能驾驶安全性的讨论</p>
+                                <div class="flex items-center mt-3 text-xs text-gray-500">
+                                    <span class="mr-3"><i class="fa fa-comment mr-1"></i> 876</span>
+                                    <span class="mr-3"><i class="fa fa-line-chart mr-1"></i> 下降</span>
+                                    <span><i class="fa fa-calendar mr-1"></i> 5天前</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 主题4 -->
+                            <div class="topic-item p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 cursor-pointer transition-all-300" data-topic="policy">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-medium text-gray-800">新能源补贴政策</h4>
+                                    <span class="topic-tag topic-tag-new">新兴</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">2025年新能源汽车补贴政策调整，续航里程门槛提高至500公里，补贴金额有所下降</p>
+                                <div class="flex items-center mt-3 text-xs text-gray-500">
+                                    <span class="mr-3"><i class="fa fa-comment mr-1"></i> 765</span>
+                                    <span class="mr-3"><i class="fa fa-line-chart mr-1"></i> 上升</span>
+                                    <span><i class="fa fa-calendar mr-1"></i> 1天前</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 主题5 -->
+                            <div class="topic-item p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 cursor-pointer transition-all-300" data-topic="price">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-medium text-gray-800">价格战升级</h4>
+                                    <span class="topic-tag topic-tag-popular">热门</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">多家主流新能源车企相继宣布降价，部分车型降价幅度超过10%，市场竞争加剧</p>
+                                <div class="flex items-center mt-3 text-xs text-gray-500">
+                                    <span class="mr-3"><i class="fa fa-comment mr-1"></i> 654</span>
+                                    <span class="mr-3"><i class="fa fa-line-chart mr-1"></i> 稳定</span>
+                                    <span><i class="fa fa-calendar mr-1"></i> 4天前</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 主题6 -->
+                            <div class="topic-item p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 cursor-pointer transition-all-300" data-topic="infrastructure">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-medium text-gray-800">充电基础设施</h4>
+                                    <span class="topic-tag topic-tag-trending">趋势</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">国家电网计划在高速公路服务区新增1000座超快充站，覆盖主要交通干线</p>
+                                <div class="flex items-center mt-3 text-xs text-gray-500">
+                                    <span class="mr-3"><i class="fa fa-comment mr-1"></i> 543</span>
+                                    <span class="mr-3"><i class="fa fa-line-chart mr-1"></i> 上升</span>
+                                    <span><i class="fa fa-calendar mr-1"></i> 6天前</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 主题7 -->
+                            <div class="topic-item p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 cursor-pointer transition-all-300" data-topic="design">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-medium text-gray-800">未来设计语言</h4>
+                                    <span class="topic-tag topic-tag-new">新兴</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">无B柱设计和自杀式车门成为新趋势，多家车企在概念车上展示创新设计理念</p>
+                                <div class="flex items-center mt-3 text-xs text-gray-500">
+                                    <span class="mr-3"><i class="fa fa-comment mr-1"></i> 432</span>
+                                    <span class="mr-3"><i class="fa fa-line-chart mr-1"></i> 上升</span>
+                                    <span><i class="fa fa-calendar mr-1"></i> 2天前</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 主题8 -->
+                            <div class="topic-item p-4 border border-gray-200 rounded-lg hover:border-primary hover:bg-blue-50 cursor-pointer transition-all-300" data-topic="service">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-medium text-gray-800">售后服务体验</h4>
+                                    <span class="topic-tag topic-tag-controversial">争议</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">部分新势力品牌售后服务网点不足，维修等待时间过长，用户满意度下降</p>
+                                <div class="flex items-center mt-3 text-xs text-gray-500">
+                                    <span class="mr-3"><i class="fa fa-comment mr-1"></i> 321</span>
+                                    <span class="mr-3"><i class="fa fa-line-chart mr-1"></i> 下降</span>
+                                    <span><i class="fa fa-calendar mr-1"></i> 7天前</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧主题详情 -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow-card p-6 h-full">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-medium text-gray-800">主题详情分析</h3>
+                            <div class="flex space-x-2">
+                                <button class="text-gray-500 hover:text-primary focus:outline-none">
+                                    <i class="fa fa-download"></i>
+                                </button>
+                                <button class="text-gray-500 hover:text-primary focus:outline-none">
+                                    <i class="fa fa-expand"></i>
+                                </button>
+                                <button id="trackTopicBtn" class="text-gray-500 hover:text-primary focus:outline-none">
+                                    <i class="fa fa-star-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 初始提示 -->
+                        <div id="initialPrompt" class="flex flex-col items-center justify-center py-12 text-center">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="fa fa-list-alt text-gray-400 text-2xl"></i>
+                            </div>
+                            <h4 class="text-lg font-medium text-gray-700 mb-2">选择主题查看详情</h4>
+                            <p class="text-gray-500 max-w-md">请在左侧选择一个主题，系统将展示该主题的详细分析数据</p>
+                        </div>
+                        
+                        <!-- 主题详情内容 (初始隐藏) -->
+                        <div id="topicDetails" class="hidden">
+                            <!-- 主题标题和元数据 -->
+                            <div class="mb-6">
+                                <div class="flex flex-wrap items-center justify-between mb-2">
+                                    <h4 id="topicTitle" class="text-xl font-bold text-gray-800">电池技术创新</h4>
+                                    <span id="topicTag" class="topic-tag topic-tag-popular">热门</span>
+                                </div>
+                                <p id="topicDescription" class="text-gray-600 mb-3">新一代固态电池技术取得突破，能量密度提升30%，充电时间缩短至15分钟</p>
+                                <div class="flex flex-wrap items-center text-sm text-gray-500">
+                                    <span class="mr-4"><i class="fa fa-comment mr-1"></i> <span id="topicComments">1,245</span> 条讨论</span>
+                                    <span class="mr-4"><i class="fa fa-line-chart mr-1"></i> <span id="topicTrend">上升</span></span>
+                                    <span class="mr-4"><i class="fa fa-calendar mr-1"></i> <span id="topicDate">2天前</span></span>
+                                    <span><i class="fa fa-source mr-1"></i> <span id="topicSources">5</span> 个来源</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 情感分布 -->
+                            <div class="mb-6">
+                                <h5 class="text-md font-medium text-gray-800 mb-3">情感分布</h5>
+                                <div class="h-64">
+                                    <canvas id="topicSentimentChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 时间趋势 -->
+                            <div class="mb-6">
+                                <h5 class="text-md font-medium text-gray-800 mb-3">讨论热度趋势</h5>
+                                <div class="h-64">
+                                    <canvas id="topicTrendChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 关键词云 -->
+                            <div class="mb-6">
+                                <h5 class="text-md font-medium text-gray-800 mb-3">相关关键词</h5>
+                                <div id="topicKeywords" class="flex flex-wrap gap-2">
+                                    <!-- 关键词将通过JS动态添加 -->
+                                </div>
+                            </div>
+                            
+                            <!-- 典型言论 -->
+                            <div>
+                                <h5 class="text-md font-medium text-gray-800 mb-3">典型言论</h5>
+                                <div class="space-y-4">
+                                    <!-- 正面言论 -->
+                                    <div class="p-4 bg-green-50 border border-green-100 rounded-lg">
+                                        <div class="flex items-center mb-2">
+                                            <span class="text-green-600 font-medium mr-2">正面</span>
+                                            <span class="text-xs text-gray-500">微博 · 2小时前</span>
+                                        </div>
+                                        <p class="text-gray-700">"固态电池技术终于取得突破，这将彻底解决电动车续航焦虑问题，期待尽快量产！"</p>
+                                    </div>
+                                    
+                                    <!-- 中性言论 -->
+                                    <div class="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                                        <div class="flex items-center mb-2">
+                                            <span class="text-blue-600 font-medium mr-2">中性</span>
+                                            <span class="text-xs text-gray-500">知乎 · 5小时前</span>
+                                        </div>
+                                        <p class="text-gray-700">"新技术的成本控制是关键，如果价格过高，可能只会应用在高端车型上，对普通消费者影响不大。"</p>
+                                    </div>
+                                    
+                                    <!-- 负面言论 -->
+                                    <div class="p-4 bg-red-50 border border-red-100 rounded-lg">
+                                        <div class="flex items-center mb-2">
+                                            <span class="text-red-600 font-medium mr-2">负面</span>
+                                            <span class="text-xs text-gray-500">论坛 · 昨天</span>
+                                        </div>
+                                        <p class="text-gray-700">"技术参数看起来很美，但实际使用中可能会有很多问题，之前某品牌的新技术就出现了不少故障。"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主题关联分析 -->
+            <div class="bg-white rounded-lg shadow-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-medium text-gray-800">主题关联分析</h3>
+                    <div class="flex space-x-2">
+                        <button class="text-gray-500 hover:text-primary focus:outline-none">
+                            <i class="fa fa-download"></i>
+                        </button>
+                        <button class="text-gray-500 hover:text-primary focus:outline-none">
+                            <i class="fa fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- 主题关联图 -->
+                    <div>
+                        <h5 class="text-md font-medium text-gray-800 mb-3">主题关联网络</h5>
+                        <div class="h-80 bg-gray-50 rounded-lg flex items-center justify-center">
+                            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/524392bc29264bfb9c75bc099f6d0390~tplv-a9rns2rl98-image.image?rcl=20251124123622F8A3A43E03EA491B3BBE&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766551051&x-signature=LiLKIM4ohYsn%2FJUsR5FgwdkuFu4%3D" alt="主题关联网络" class="max-h-full max-w-full object-contain">
+                        </div>
+                    </div>
+                    
+                    <!-- 主题相似度矩阵 -->
+                    <div>
+                        <h5 class="text-md font-medium text-gray-800 mb-3">主题相似度矩阵</h5>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                                        <th class="px-4 py-2 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">电池技术</th>
+                                        <th class="px-4 py-2 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">超快充</th>
+                                        <th class="px-4 py-2 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">智能驾驶</th>
+                                        <th class="px-4 py-2 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">补贴政策</th>
+                                        <th class="px-4 py-2 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">价格战</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-4 py-2 text-sm font-medium text-gray-700">电池技术</td>
+                                        <td class="px-4 py-2 text-center">1.00</td>
+                                        <td class="px-4 py-2 text-center bg-blue-50">0.85</td>
+                                        <td class="px-4 py-2 text-center">0.30</td>
+                                        <td class="px-4 py-2 text-center">0.45</td>
+                                        <td class="px-4 py-2 text-center">0.25</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2 text-sm font-medium text-gray-700">超快充</td>
+                                        <td class="px-4 py-2 text-center bg-blue-50">0.85</td>
+                                        <td class="px-4 py-2 text-center">1.00</td>
+                                        <td class="px-4 py-2 text-center">0.25</td>
+                                        <td class="px-4 py-2 text-center">0.35</td>
+                                        <td class="px-4 py-2 text-center">0.20</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2 text-sm font-medium text-gray-700">智能驾驶</td>
+                                        <td class="px-4 py-2 text-center">0.30</td>
+                                        <td class="px-4 py-2 text-center">0.25</td>
+                                        <td class="px-4 py-2 text-center">1.00</td>
+                                        <td class="px-4 py-2 text-center">0.15</td>
+                                        <td class="px-4 py-2 text-center bg-blue-50">0.65</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2 text-sm font-medium text-gray-700">补贴政策</td>
+                                        <td class="px-4 py-2 text-center">0.45</td>
+                                        <td class="px-4 py-2 text-center">0.35</td>
+                                        <td class="px-4 py-2 text-center">0.15</td>
+                                        <td class="px-4 py-2 text-center">1.00</td>
+                                        <td class="px-4 py-2 text-center bg-blue-50">0.75</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2 text-sm font-medium text-gray-700">价格战</td>
+                                        <td class="px-4 py-2 text-center">0.25</td>
+                                        <td class="px-4 py-2 text-center">0.20</td>
+                                        <td class="px-4 py-2 text-center bg-blue-50">0.65</td>
+                                        <td class="px-4 py-2 text-center bg-blue-50">0.75</td>
+                                        <td class="px-4 py-2 text-center">1.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 flex items-center">
+                            <span class="inline-block w-4 h-4 bg-blue-50 mr-1"></span>
+                            <span>相似度 > 0.6</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 自定义主题分析 -->
+            <div class="bg-white rounded-lg shadow-card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-medium text-gray-800">自定义主题分析</h3>
+                    <button id="analyzeCustomTopicBtn" class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary flex items-center">
+                        <i class="fa fa-search mr-2"></i>
+                        分析主题
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- 关键词输入 -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-gray-50 rounded-lg p-4 h-full">
+                            <h5 class="text-md font-medium text-gray-800 mb-3">输入关键词</h5>
+                            <p class="text-sm text-gray-600 mb-4">输入相关关键词，系统将自动分析相关主题</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="customKeywords" class="block text-sm font-medium text-gray-700 mb-1">关键词</label>
+                                    <textarea id="customKeywords" name="customKeywords" rows="4" 
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                                        placeholder="请输入关键词，多个关键词用逗号分隔..."></textarea>
+                                    <p class="text-xs text-gray-500 mt-1">例如：续航里程,充电速度,智能驾驶</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">布尔逻辑</label>
+                                    <div class="flex space-x-3">
+                                        <div class="flex items-center">
+                                            <input type="radio" id="logicAnd" name="logic" value="and" checked 
+                                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                            <label for="logicAnd" class="ml-2 block text-sm text-gray-700">AND</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="radio" id="logicOr" name="logic" value="or" 
+                                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                            <label for="logicOr" class="ml-2 block text-sm text-gray-700">OR</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="radio" id="logicNot" name="logic" value="not" 
+                                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                            <label for="logicNot" class="ml-2 block text-sm text-gray-700">NOT</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="customTimeRange" class="block text-sm font-medium text-gray-700 mb-1">时间范围</label>
+                                    <select id="customTimeRange" name="customTimeRange" 
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                                        <option>最近7天</option>
+                                        <option>最近30天</option>
+                                        <option>最近90天</option>
+                                        <option>自定义</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="pt-2">
+                                    <button id="clearCustomTopic" class="w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                        清空
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 分析结果 -->
+                    <div class="lg:col-span-2">
+                        <div id="customTopicInitial" class="flex flex-col items-center justify-center py-12 text-center">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="fa fa-search text-gray-400 text-2xl"></i>
+                            </div>
+                            <h4 class="text-lg font-medium text-gray-700 mb-2">输入关键词进行分析</h4>
+                            <p class="text-gray-500 max-w-md">请在左侧输入关键词并设置分析参数，系统将为您分析相关主题</p>
+                        </div>
+                        
+                        <div id="customTopicLoading" class="hidden flex flex-col items-center justify-center py-12">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                            <p class="text-gray-600">正在分析主题，请稍候...</p>
+                        </div>
+                        
+                        <div id="customTopicResults" class="hidden">
+                            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                                <h5 class="text-md font-medium text-gray-800 mb-3">分析结果</h5>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div class="p-3 bg-white rounded-lg shadow-sm">
+                                        <div class="text-sm text-gray-500">相关主题数量</div>
+                                        <div class="text-xl font-bold text-gray-800">3</div>
+                                    </div>
+                                    <div class="p-3 bg-white rounded-lg shadow-sm">
+                                        <div class="text-sm text-gray-500">相关舆情数量</div>
+                                        <div class="text-xl font-bold text-gray-800">1,245</div>
+                                    </div>
+                                    <div class="p-3 bg-white rounded-lg shadow-sm">
+                                        <div class="text-sm text-gray-500">平均情感得分</div>
+                                        <div class="text-xl font-bold text-green-600">0.72</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- 情感分布 -->
+                                <div>
+                                    <h5 class="text-md font-medium text-gray-800 mb-3">情感分布</h5>
+                                    <div class="h-64">
+                                        <canvas id="customTopicSentimentChart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- 时间趋势 -->
+                                <div>
+                                    <h5 class="text-md font-medium text-gray-800 mb-3">讨论热度趋势</h5>
+                                    <div class="h-64">
+                                        <canvas id="customTopicTrendChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <h5 class="text-md font-medium text-gray-800 mb-3">相关主题</h5>
+                                <div class="space-y-3">
+                                    <div class="p-4 border border-gray-200 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <h6 class="font-medium text-gray-800">续航技术突破</h6>
+                                            <span class="text-xs text-gray-500">相似度: 92%</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1">新型电池技术使续航里程突破1000公里，引发行业广泛关注</p>
+                                    </div>
+                                    
+                                    <div class="p-4 border border-gray-200 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <h6 class="font-medium text-gray-800">充电基础设施建设</h6>
+                                            <span class="text-xs text-gray-500">相似度: 78%</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1">国家加大充电基础设施投入，超快充站数量大幅增加</p>
+                                    </div>
+                                    
+                                    <div class="p-4 border border-gray-200 rounded-lg">
+                                        <div class="flex justify-between items-start">
+                                            <h6 class="font-medium text-gray-800">电池安全技术</h6>
+                                            <span class="text-xs text-gray-500">相似度: 65%</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1">多家车企推出新一代电池安全技术，提高电池系统稳定性</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 flex justify-end">
+                                <button class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary mr-3">
+                                    保存为新主题
+                                </button>
+                                <button class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                    生成分析报告
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-4">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-500">
+                    © 2025 新能源汽车舆情分析系统. 保留所有权利.
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                        <span class="sr-only">帮助中心</span>
+                        <i class="fa fa-question-circle"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                        <span class="sr-only">设置</span>
+                        <i class="fa fa-cog"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                        <span class="sr-only">联系我们</span>
+                        <i class="fa fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 移动端搜索栏 -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10">
+        <div class="relative">
+            <input type="text" placeholder="搜索舆情信息、关键词..." 
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                <i class="fa fa-search"></i>
+            </span>
+        </div>
+    </div>
+
+    <!-- 导出主题模态框 -->
+    <div id="exportTopicsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">导出主题</h2>
+                <button id="closeExportTopicsModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">选择导出内容</label>
+                    <div class="space-y-2">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="exportAllTopics" name="exportAllTopics" checked 
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="exportAllTopics" class="ml-2 block text-sm text-gray-700">所有主题</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="exportTopicDetails" name="exportTopicDetails" checked 
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="exportTopicDetails" class="ml-2 block text-sm text-gray-700">主题详情</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="exportSentimentData" name="exportSentimentData" checked 
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="exportSentimentData" class="ml-2 block text-sm text-gray-700">情感数据</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="exportTrendData" name="exportTrendData" checked 
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="exportTrendData" class="ml-2 block text-sm text-gray-700">趋势数据</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="exportFormat" class="block text-sm font-medium text-gray-700 mb-1">导出格式</label>
+                    <select id="exportFormat" name="exportFormat" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                        <option value="excel">Excel</option>
+                        <option value="csv">CSV</option>
+                        <option value="json">JSON</option>
+                        <option value="pdf">PDF报告</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelExportTopics" class="bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                        取消
+                    </button>
+                    <button id="confirmExportTopics" class="bg-primary text-white py-2 px-6 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        导出
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userMenu = document.getElementById('userMenu');
+        const topicItems = document.querySelectorAll('.topic-item');
+        const initialPrompt = document.getElementById('initialPrompt');
+        const topicDetails = document.getElementById('topicDetails');
+        const topicTitle = document.getElementById('topicTitle');
+        const topicTag = document.getElementById('topicTag');
+        const topicDescription = document.getElementById('topicDescription');
+        const topicComments = document.getElementById('topicComments');
+        const topicTrend = document.getElementById('topicTrend');
+        const topicDate = document.getElementById('topicDate');
+        const topicSources = document.getElementById('topicSources');
+        const topicKeywords = document.getElementById('topicKeywords');
+        const trackTopicBtn = document.getElementById('trackTopicBtn');
+        const exportTopicsBtn = document.getElementById('exportTopicsBtn');
+        const exportTopicsModal = document.getElementById('exportTopicsModal');
+        const closeExportTopicsModal = document.getElementById('closeExportTopicsModal');
+        const cancelExportTopics = document.getElementById('cancelExportTopics');
+        const confirmExportTopics = document.getElementById('confirmExportTopics');
+        const customKeywords = document.getElementById('customKeywords');
+        const clearCustomTopic = document.getElementById('clearCustomTopic');
+        const analyzeCustomTopicBtn = document.getElementById('analyzeCustomTopicBtn');
+        const customTopicInitial = document.getElementById('customTopicInitial');
+        const customTopicLoading = document.getElementById('customTopicLoading');
+        const customTopicResults = document.getElementById('customTopicResults');
+
+        // 侧边栏切换
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+        });
+
+        // 用户菜单切换
+        userMenuButton.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+
+        // 点击页面其他地方关闭用户菜单
+        document.addEventListener('click', (e) => {
+            if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // 主题点击事件
+        topicItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // 移除所有主题的选中状态
+                topicItems.forEach(i => i.classList.remove('border-primary', 'bg-blue-50'));
+                
+                // 添加当前主题的选中状态
+                item.classList.add('border-primary', 'bg-blue-50');
+                
+                // 获取主题数据
+                const topicId = item.dataset.topic;
+                const title = item.querySelector('h4').textContent;
+                const tag = item.querySelector('.topic-tag').textContent;
+                const tagClass = item.querySelector('.topic-tag').className;
+                const description = item.querySelector('p').textContent;
+                const comments = item.querySelector('.fa-comment').nextSibling.textContent.trim();
+                const trend = item.querySelector('.fa-line-chart').nextSibling.textContent.trim();
+                const date = item.querySelector('.fa-calendar').nextSibling.textContent.trim();
+                
+                // 更新主题详情
+                topicTitle.textContent = title;
+                topicTag.textContent = tag;
+                topicTag.className = tagClass;
+                topicDescription.textContent = description;
+                topicComments.textContent = comments;
+                topicTrend.textContent = trend;
+                topicDate.textContent = date;
+                topicSources.textContent = Math.floor(Math.random() * 5) + 3; // 随机3-7个来源
+                
+                // 生成关键词
+                generateKeywords(topicId);
+                
+                // 初始化主题情感分布图
+                initTopicSentimentChart();
+                
+                // 初始化主题趋势图
+                initTopicTrendChart();
+                
+                // 显示主题详情，隐藏初始提示
+                initialPrompt.classList.add('hidden');
+                topicDetails.classList.remove('hidden');
+            });
+        });
+
+        // 跟踪主题按钮
+        trackTopicBtn.addEventListener('click', () => {
+            if (trackTopicBtn.innerHTML.includes('fa-star-o')) {
+                trackTopicBtn.innerHTML = '<i class="fa fa-star text-yellow-500"></i>';
+                alert('已添加到跟踪列表');
+            } else {
+                trackTopicBtn.innerHTML = '<i class="fa fa-star-o"></i>';
+                alert('已从跟踪列表移除');
+            }
+        });
+
+        // 生成关键词
+        function generateKeywords(topicId) {
+            // 清空现有关键词
+            topicKeywords.innerHTML = '';
+            
+            // 主题关键词映射
+            const topicKeywordsMap = {
+                'battery': ['固态电池', '能量密度', '充电时间', '电池寿命', '安全性', '量产'],
+                'charging': ['超快充', '800V高压平台', '充电速度', '充电桩', '充电网络', '续航补能'],
+                'autonomous': ['智能驾驶', '自动驾驶', '安全性', '事故', 'L2+', '激光雷达'],
+                'policy': ['补贴政策', '续航门槛', '补贴金额', '新能源牌照', '购置税减免', '双积分'],
+                'price': ['价格战', '降价', '性价比', '市场竞争', '促销活动', '购车优惠'],
+                'infrastructure': ['充电桩', '充电网络', '超快充站', '高速公路充电', '充电便利性', '充电体验'],
+                'design': ['无B柱', '自杀式车门', '概念车', '设计语言', '内饰设计', '智能化座舱'],
+                'service': ['售后服务', '维修网点', '等待时间', '用户满意度', '保修政策', '软件更新']
+            };
+            
+            // 获取当前主题的关键词
+            const keywords = topicKeywordsMap[topicId] || ['新能源汽车', '技术创新', '用户体验'];
+            
+            // 添加关键词标签
+            keywords.forEach(keyword => {
+                const tag = document.createElement('span');
+                tag.className = 'px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full';
+                tag.textContent = keyword;
+                topicKeywords.appendChild(tag);
+            });
+        }
+
+        // 初始化主题情感分布图
+        function initTopicSentimentChart() {
+            const ctx = document.getElementById('topicSentimentChart').getContext('2d');
+            
+            // 销毁现有图表（如果存在）
+            if (window.topicSentimentChart) {
+                window.topicSentimentChart.destroy();
+            }
+            
+            // 生成随机数据
+            const positive = Math.floor(Math.random() * 40) + 50; // 50-90
+            const neutral = Math.floor(Math.random() * 20) + 10;  // 10-30
+            const negative = 100 - positive - neutral;
+            
+            // 创建图表
+            window.topicSentimentChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['正面', '中性', '负面'],
+                    datasets: [{
+                        data: [positive, neutral, negative],
+                        backgroundColor: [
+                            '#10b981', // 绿色 - 正面
+                            '#3b82f6', // 蓝色 - 中性
+                            '#ef4444'  // 红色 - 负面
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 初始化主题趋势图
+        function initTopicTrendChart() {
+            const ctx = document.getElementById('topicTrendChart').getContext('2d');
+            
+            // 销毁现有图表（如果存在）
+            if (window.topicTrendChart) {
+                window.topicTrendChart.destroy();
+            }
+            
+            // 生成过去7天的日期标签
+            const dates = [];
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                dates.push(`${date.getMonth() + 1}/${date.getDate()}`);
+            }
+            
+            // 生成随机趋势数据
+            const data = [];
+            let value = Math.floor(Math.random() * 50) + 50; // 初始值50-100
+            
+            for (let i = 0; i < 7; i++) {
+                // 添加一些随机波动
+                value += Math.floor(Math.random() * 40) - 15; // -15到25的随机波动
+                value = Math.max(0, value); // 确保值不为负
+                data.push(value);
+            }
+            
+            // 创建图表
+            window.topicTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: '讨论热度',
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#3b82f6',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 导出主题模态框控制
+        exportTopicsBtn.addEventListener('click', () => {
+            exportTopicsModal.classList.remove('hidden');
+        });
+
+        closeExportTopicsModal.addEventListener('click', () => {
+            exportTopicsModal.classList.add('hidden');
+        });
+
+        cancelExportTopics.addEventListener('click', () => {
+            exportTopicsModal.classList.add('hidden');
+        });
+
+        confirmExportTopics.addEventListener('click', () => {
+            const format = document.getElementById('exportFormat').value;
+            exportTopicsModal.classList.add('hidden');
+            alert(`主题已导出为${format.toUpperCase()}格式，正在下载...`);
+        });
+
+        // 清空自定义主题
+        clearCustomTopic.addEventListener('click', () => {
+            customKeywords.value = '';
+            customTopicInitial.classList.remove('hidden');
+            customTopicLoading.classList.add('hidden');
+            customTopicResults.classList.add('hidden');
+        });
+
+        // 分析自定义主题
+        analyzeCustomTopicBtn.addEventListener('click', () => {
+            const keywords = customKeywords.value.trim();
+            
+            if (!keywords) {
+                alert('请输入关键词');
+                return;
+            }
+            
+            // 显示加载状态
+            customTopicInitial.classList.add('hidden');
+            customTopicLoading.classList.remove('hidden');
+            customTopicResults.classList.add('hidden');
+            
+            // 模拟分析延迟
+            setTimeout(() => {
+                // 隐藏加载状态，显示分析结果
+                customTopicLoading.classList.add('hidden');
+                customTopicResults.classList.remove('hidden');
+                
+                // 初始化自定义主题情感分布图
+                initCustomTopicSentimentChart();
+                
+                // 初始化自定义主题趋势图
+                initCustomTopicTrendChart();
+            }, 1500);
+        });
+
+        // 初始化自定义主题情感分布图
+        function initCustomTopicSentimentChart() {
+            const ctx = document.getElementById('customTopicSentimentChart').getContext('2d');
+            
+            // 销毁现有图表（如果存在）
+            if (window.customTopicSentimentChart) {
+                window.customTopicSentimentChart.destroy();
+            }
+            
+            // 生成随机数据
+            const positive = Math.floor(Math.random() * 40) + 50; // 50-90
+            const neutral = Math.floor(Math.random() * 20) + 10;  // 10-30
+            const negative = 100 - positive - neutral;
+            
+            // 创建图表
+            window.customTopicSentimentChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['正面', '中性', '负面'],
+                    datasets: [{
+                        data: [positive, neutral, negative],
+                        backgroundColor: [
+                            '#10b981', // 绿色 - 正面
+                            '#3b82f6', // 蓝色 - 中性
+                            '#ef4444'  // 红色 - 负面
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // 初始化自定义主题趋势图
+        function initCustomTopicTrendChart() {
+            const ctx = document.getElementById('customTopicTrendChart').getContext('2d');
+            
+            // 销毁现有图表（如果存在）
+            if (window.customTopicTrendChart) {
+                window.customTopicTrendChart.destroy();
+            }
+            
+            // 生成过去7天的日期标签
+            const dates = [];
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                dates.push(`${date.getMonth() + 1}/${date.getDate()}`);
+            }
+            
+            // 生成随机趋势数据
+            const data = [];
+            let value = Math.floor(Math.random() * 50) + 50; // 初始值50-100
+            
+            for (let i = 0; i < 7; i++) {
+                // 添加一些随机波动
+                value += Math.floor(Math.random() * 40) - 15; // -15到25的随机波动
+                value = Math.max(0, value); // 确保值不为负
+                data.push(value);
+            }
+            
+            // 创建图表
+            window.customTopicTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: '讨论热度',
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#3b82f6',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 点击模态框外部关闭模态框
+        window.addEventListener('click', (e) => {
+            if (e.target === exportTopicsModal) {
+                exportTopicsModal.classList.add('hidden');
+            }
+        });
+
+        // 检查URL参数，确定用户角色
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role');
+        
+        if (role === 'user') {
+            // 隐藏管理员专属菜单
+            document.querySelectorAll('a:has(.fa-cogs), a:has(.fa-users)').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // 更新用户菜单显示
+            document.querySelector('#userMenuButton span.hidden').textContent = '普通用户';
+        }
+    </script>
+</body>
+</html>

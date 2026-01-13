@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新能源汽车舆情分析系统 - 情感分析</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        accent: '#0ea5e9',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        neutral: '#f1f5f9',
+                        'neutral-dark': '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .transition-all-300 {
+                transition: all 300ms ease-in-out;
+            }
+            .sidebar-active {
+                @apply bg-secondary text-white;
+            }
+            .sidebar-icon {
+                @apply mr-3 text-lg;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1;
+            }
+            .sentiment-positive {
+                @apply bg-green-100 text-green-800;
+            }
+            .sentiment-neutral {
+                @apply bg-blue-100 text-blue-800;
+            }
+            .sentiment-negative {
+                @apply bg-red-100 text-red-800;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="flex items-center justify-between px-4 py-3">
+            <!-- 左侧Logo和标题 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-primary focus:outline-none">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center">
+                    <img src="https://p3-doubao-search-sign.byteimg.com/labis/97275f7dbcab7d29338c0f8d5e81b820~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1779511019&x-signature=S8QuGT9saJ1zXQ4CfOvu5tk%2Bbpg%3D" alt="Logo" class="h-10 w-10 rounded-full">
+                    <h1 class="ml-2 text-xl font-bold text-primary hidden sm:block">新能源汽车舆情分析系统</h1>
+                </div>
+            </div>
+
+            <!-- 中间搜索栏 -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-4">
+                <div class="relative w-full">
+                    <input type="text" placeholder="搜索舆情信息、关键词..." 
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                        <i class="fa fa-search"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- 右侧用户菜单 -->
+            <div class="flex items-center space-x-4">
+                <!-- 通知图标 -->
+                <button class="relative text-gray-600 hover:text-primary focus:outline-none">
+                    <i class="fa fa-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                </button>
+
+                <!-- 用户下拉菜单 -->
+                <div class="relative">
+                    <button id="userMenuButton" class="flex items-center space-x-2 focus:outline-none">
+                        <div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <span class="hidden md:block text-gray-700">管理员</span>
+                        <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                    </button>
+
+                    <!-- 用户下拉菜单内容 -->
+                    <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 hidden">
+                        <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-user-circle mr-2"></i>个人资料
+                        </a>
+                        <a href="settings.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-cog mr-2"></i>设置
+                        </a>
+                        <div class="border-t border-gray-100 my-1"></div>
+                        <a href="login.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-sign-out mr-2"></i>退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="bg-white shadow-sm w-64 flex-shrink-0 hidden lg:block transition-all duration-300 ease-in-out">
+            <nav class="mt-5 px-2">
+                <div class="space-y-1">
+                    <!-- 仪表盘 -->
+                    <a href="index.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-dashboard sidebar-icon"></i>
+                        仪表盘
+                    </a>
+
+                    <!-- 情感分析 -->
+                    <a href="sentiment.html" class="sidebar-active group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-heart sidebar-icon"></i>
+                        情感分析
+                    </a>
+
+                    <!-- 主题建模 -->
+                    <a href="topic.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-tags sidebar-icon"></i>
+                        主题建模
+                    </a>
+
+                    <!-- 报告生成 -->
+                    <a href="#report" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-file-text sidebar-icon"></i>
+                        报告生成
+                    </a>
+
+                    <!-- 搜索与查询 -->
+                    <a href="#search" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-search sidebar-icon"></i>
+                        搜索与查询
+                    </a>
+
+                    <!-- 数据采集配置 (管理员专属) -->
+                    <a href="data-collection.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-cogs sidebar-icon"></i>
+                        数据采集配置
+                        <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">管理员</span>
+                    </a>
+
+                    <!-- 用户管理 (管理员专属) -->
+                    <a href="user-management.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-users sidebar-icon"></i>
+                        用户管理
+                        <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">管理员</span>
+                    </a>
+
+                    <!-- 系统设置 -->
+                    <a href="settings.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-sliders sidebar-icon"></i>
+                        系统设置
+                    </a>
+                </div>
+
+                <!-- 数据源状态 -->
+                <div class="mt-8">
+                    <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        数据源状态
+                    </h3>
+                    <div class="mt-2 space-y-1">
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            微博API
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            微信公众平台
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500 mr-3"></span>
+                            新闻RSS
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-red-500 mr-3"></span>
+                            论坛数据
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            视频平台评论
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
+            <!-- 面包屑导航 -->
+            <div class="flex items-center text-sm text-gray-600 mb-6">
+                <a href="index.html" class="hover:text-primary">首页</a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-800">情感分析</span>
+            </div>
+
+            <!-- 页面标题 -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">情感分析</h2>
+                <div class="mt-4 md:mt-0 flex items-center space-x-3">
+                    <!-- 时间范围选择 -->
+                    <div class="relative">
+                        <select class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option>最近7天</option>
+                            <option>最近30天</option>
+                            <option>最近90天</option>
+                            <option>自定义</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fa fa-chevron-down"></i>
+                        </div>
+                    </div>
+
+                    <!-- 刷新按钮 -->
+                    <button class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary flex items-center">
+                        <i class="fa fa-refresh mr-2"></i>
+                        刷新数据
+                    </button>
+                </div>
+            </div>
+
+            <!-- 情感分析区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- 左侧文本输入区 -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-card p-6 h-full">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">文本情感分析</h3>
+                        <p class="text-sm text-gray-600 mb-4">输入或粘贴需要分析的文本内容，系统将自动分析其情感倾向</p>
+                        
+                        <form id="sentimentForm" class="space-y-4">
+                            <div>
+                                <label for="textInput" class="block text-sm font-medium text-gray-700 mb-1">输入文本</label>
+                                <textarea id="textInput" name="textInput" rows="8" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                                    placeholder="请输入需要分析的文本内容..."></textarea>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span id="charCount" class="text-xs text-gray-500">0/5000</span>
+                                    <span class="text-xs text-gray-500">支持最大5000字符</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex space-x-3">
+                                <button type="button" id="clearText" class="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                    清空
+                                </button>
+                                <button type="submit" id="analyzeText" class="flex-1 bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                    分析情感
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="mt-6">
+                            <h4 class="text-md font-medium text-gray-800 mb-3">示例文本</h4>
+                            <div class="space-y-2">
+                                <button class="example-text w-full text-left p-2 bg-gray-50 hover:bg-gray-100 rounded text-sm text-gray-700 transition-all-300">
+                                    这款新能源车的续航里程真的很出色，充一次电可以跑400多公里，完全满足日常通勤需求。
+                                </button>
+                                <button class="example-text w-full text-left p-2 bg-gray-50 hover:bg-gray-100 rounded text-sm text-gray-700 transition-all-300">
+                                    充电速度太慢了，每次都要等很久，而且充电桩分布不均匀，使用体验很差。
+                                </button>
+                                <button class="example-text w-full text-left p-2 bg-gray-50 hover:bg-gray-100 rounded text-sm text-gray-700 transition-all-300">
+                                    这款车的智能驾驶功能表现一般，在复杂路况下还需要人工干预，但价格相比同级别车型有优势。
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧分析结果区 -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow-card p-6 h-full">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-medium text-gray-800">分析结果</h3>
+                            <div class="flex space-x-2">
+                                <button class="text-gray-500 hover:text-primary focus:outline-none">
+                                    <i class="fa fa-download"></i>
+                                </button>
+                                <button class="text-gray-500 hover:text-primary focus:outline-none">
+                                    <i class="fa fa-expand"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 初始提示 -->
+                        <div id="initialPrompt" class="flex flex-col items-center justify-center py-12 text-center">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="fa fa-file-text-o text-gray-400 text-2xl"></i>
+                            </div>
+                            <h4 class="text-lg font-medium text-gray-700 mb-2">输入文本进行情感分析</h4>
+                            <p class="text-gray-500 max-w-md">请在左侧输入或粘贴需要分析的文本内容，系统将自动分析其情感倾向并展示结果</p>
+                        </div>
+                        
+                        <!-- 分析结果 (初始隐藏) -->
+                        <div id="analysisResult" class="hidden">
+                            <!-- 情感分类和得分 -->
+                            <div class="mb-6">
+                                <h4 class="text-md font-medium text-gray-800 mb-3">情感分类</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div id="sentimentPositive" class="p-4 rounded-lg border border-gray-200 text-center">
+                                        <div class="text-3xl font-bold text-green-500 mb-1">0%</div>
+                                        <div class="text-sm text-gray-600">正面情感</div>
+                                    </div>
+                                    <div id="sentimentNeutral" class="p-4 rounded-lg border border-gray-200 text-center">
+                                        <div class="text-3xl font-bold text-blue-500 mb-1">0%</div>
+                                        <div class="text-sm text-gray-600">中性情感</div>
+                                    </div>
+                                    <div id="sentimentNegative" class="p-4 rounded-lg border border-gray-200 text-center">
+                                        <div class="text-3xl font-bold text-red-500 mb-1">0%</div>
+                                        <div class="text-sm text-gray-600">负面情感</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 情感得分 -->
+                            <div class="mb-6">
+                                <h4 class="text-md font-medium text-gray-800 mb-3">情感得分</h4>
+                                <div class="relative pt-1">
+                                    <div class="flex mb-2 items-center justify-between">
+                                        <div>
+                                            <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-600 bg-red-200">
+                                                负面
+                                            </span>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-xs font-semibold inline-block text-green-600 bg-green-200 py-1 px-2 uppercase rounded-full">
+                                                正面
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+                                        <div id="sentimentScoreBar" style="width: 50%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-500">
+                                        <span>0</span>
+                                        <span>0.5</span>
+                                        <span>1.0</span>
+                                    </div>
+                                    <div class="text-center mt-2">
+                                        <span id="sentimentScoreValue" class="text-lg font-semibold text-gray-800">0.5</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 关键词提取 -->
+                            <div class="mb-6">
+                                <h4 class="text-md font-medium text-gray-800 mb-3">关键词提取</h4>
+                                <div id="keywords" class="flex flex-wrap gap-2">
+                                    <!-- 关键词将通过JS动态添加 -->
+                                </div>
+                            </div>
+                            
+                            <!-- 情感趋势图 -->
+                            <div>
+                                <h4 class="text-md font-medium text-gray-800 mb-3">情感趋势</h4>
+                                <div class="h-64">
+                                    <canvas id="sentimentTrendChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 加载中状态 (初始隐藏) -->
+                        <div id="loadingState" class="hidden flex flex-col items-center justify-center py-12">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                            <p class="text-gray-600">正在分析文本情感，请稍候...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 批量分析区域 -->
+            <div class="bg-white rounded-lg shadow-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-medium text-gray-800">批量情感分析</h3>
+                    <button id="batchAnalysisBtn" class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary flex items-center">
+                        <i class="fa fa-upload mr-2"></i>
+                        上传文件
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2">
+                        <p class="text-sm text-gray-600 mb-4">支持批量上传文本文件进行情感分析，系统将自动处理并生成分析报告</p>
+                        
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                            <i class="fa fa-cloud-upload text-gray-400 text-3xl mb-2"></i>
+                            <p class="text-gray-500 mb-2">拖拽文件到此处或点击上传</p>
+                            <p class="text-xs text-gray-400">支持 .txt, .csv, .xlsx 格式，最大 10MB</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="text-md font-medium text-gray-800 mb-3">批量分析结果</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">总文本数</span>
+                                    <span class="font-medium">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">正面文本数</span>
+                                    <span class="font-medium text-green-600">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">中性文本数</span>
+                                    <span class="font-medium text-blue-600">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">负面文本数</span>
+                                    <span class="font-medium text-red-600">0</span>
+                                </div>
+                                <div class="border-t border-gray-200 my-2"></div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-gray-800">平均情感得分</span>
+                                    <span class="font-medium">0.0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <button class="w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm">
+                                    下载分析报告
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 历史分析记录 -->
+            <div class="bg-white rounded-lg shadow-card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-medium text-gray-800">历史分析记录</h3>
+                    <a href="#" class="text-sm text-primary hover:text-secondary">查看全部</a>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分析文本</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">情感倾向</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">情感得分</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分析时间</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 truncate max-w-xs">这款新能源车的续航里程真的很出色，充一次电可以跑400多公里...</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        正面
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    0.85
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2025-07-20 14:30
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-primary hover:text-secondary mr-3">查看</a>
+                                    <a href="#" class="text-gray-600 hover:text-gray-900">删除</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 truncate max-w-xs">充电速度太慢了，每次都要等很久，而且充电桩分布不均匀...</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        负面
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    0.20
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2025-07-19 09:15
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-primary hover:text-secondary mr-3">查看</a>
+                                    <a href="#" class="text-gray-600 hover:text-gray-900">删除</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 truncate max-w-xs">这款车的智能驾驶功能表现一般，在复杂路况下还需要人工干预...</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        中性
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    0.52
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2025-07-18 16:45
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-primary hover:text-secondary mr-3">查看</a>
+                                    <a href="#" class="text-gray-600 hover:text-gray-900">删除</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-4">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-500">
+                    © 2025 新能源汽车舆情分析系统. 保留所有权利.
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                        <span class="sr-only">帮助中心</span>
+                        <i class="fa fa-question-circle"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                        <span class="sr-only">设置</span>
+                        <i class="fa fa-cog"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                        <span class="sr-only">联系我们</span>
+                        <i class="fa fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 移动端搜索栏 -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10">
+        <div class="relative">
+            <input type="text" placeholder="搜索舆情信息、关键词..." 
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                <i class="fa fa-search"></i>
+            </span>
+        </div>
+    </div>
+
+    <!-- 批量分析模态框 -->
+    <div id="batchAnalysisModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">批量情感分析</h2>
+                <button id="closeBatchAnalysisModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">上传包含文本的文件进行批量情感分析，支持 .txt, .csv, .xlsx 格式</p>
+                
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <i class="fa fa-cloud-upload text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-500 mb-2">拖拽文件到此处或点击上传</p>
+                    <p class="text-sm text-gray-400 mb-4">支持 .txt, .csv, .xlsx 格式，最大 10MB</p>
+                    <button class="bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                        选择文件
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button id="cancelBatchAnalysis" class="bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    取消
+                </button>
+                <button id="startBatchAnalysis" class="bg-primary text-white py-2 px-6 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    开始分析
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量分析进度模态框 -->
+    <div id="batchProgressModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4 text-center">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">正在进行批量分析</h2>
+            <div class="mb-6">
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="batchProgress" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+                <p id="batchProgressText" class="mt-2 text-sm text-gray-600">0%</p>
+            </div>
+            <p class="text-gray-600 mb-6">正在处理文件，请稍候...</p>
+            <button id="cancelBatchProgress" class="bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                取消
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userMenu = document.getElementById('userMenu');
+        const textInput = document.getElementById('textInput');
+        const charCount = document.getElementById('charCount');
+        const clearText = document.getElementById('clearText');
+        const analyzeText = document.getElementById('analyzeText');
+        const sentimentForm = document.getElementById('sentimentForm');
+        const initialPrompt = document.getElementById('initialPrompt');
+        const analysisResult = document.getElementById('analysisResult');
+        const loadingState = document.getElementById('loadingState');
+        const sentimentPositive = document.getElementById('sentimentPositive');
+        const sentimentNeutral = document.getElementById('sentimentNeutral');
+        const sentimentNegative = document.getElementById('sentimentNegative');
+        const sentimentScoreBar = document.getElementById('sentimentScoreBar');
+        const sentimentScoreValue = document.getElementById('sentimentScoreValue');
+        const keywords = document.getElementById('keywords');
+        const exampleTexts = document.querySelectorAll('.example-text');
+        const batchAnalysisBtn = document.getElementById('batchAnalysisBtn');
+        const batchAnalysisModal = document.getElementById('batchAnalysisModal');
+        const closeBatchAnalysisModal = document.getElementById('closeBatchAnalysisModal');
+        const cancelBatchAnalysis = document.getElementById('cancelBatchAnalysis');
+        const startBatchAnalysis = document.getElementById('startBatchAnalysis');
+        const batchProgressModal = document.getElementById('batchProgressModal');
+        const batchProgress = document.getElementById('batchProgress');
+        const batchProgressText = document.getElementById('batchProgressText');
+        const cancelBatchProgress = document.getElementById('cancelBatchProgress');
+
+        // 侧边栏切换
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+        });
+
+        // 用户菜单切换
+        userMenuButton.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+
+        // 点击页面其他地方关闭用户菜单
+        document.addEventListener('click', (e) => {
+            if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // 字符计数
+        textInput.addEventListener('input', () => {
+            const count = textInput.value.length;
+            charCount.textContent = `${count}/5000`;
+            
+            if (count > 5000) {
+                charCount.classList.add('text-red-500');
+                textInput.value = textInput.value.substring(0, 5000);
+                charCount.textContent = `5000/5000`;
+            } else {
+                charCount.classList.remove('text-red-500');
+            }
+        });
+
+        // 清空文本
+        clearText.addEventListener('click', () => {
+            textInput.value = '';
+            charCount.textContent = `0/5000`;
+            charCount.classList.remove('text-red-500');
+            initialPrompt.classList.remove('hidden');
+            analysisResult.classList.add('hidden');
+        });
+
+        // 示例文本点击
+        exampleTexts.forEach(btn => {
+            btn.addEventListener('click', () => {
+                textInput.value = btn.textContent.trim();
+                charCount.textContent = `${textInput.value.length}/5000`;
+                initialPrompt.classList.remove('hidden');
+                analysisResult.classList.add('hidden');
+            });
+        });
+
+        // 情感分析表单提交
+        sentimentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const text = textInput.value.trim();
+            if (!text) {
+                alert('请输入需要分析的文本');
+                return;
+            }
+            
+            // 显示加载状态
+            initialPrompt.classList.add('hidden');
+            analysisResult.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            
+            // 模拟分析延迟
+            setTimeout(() => {
+                // 隐藏加载状态，显示分析结果
+                loadingState.classList.add('hidden');
+                analysisResult.classList.remove('hidden');
+                
+                // 根据文本内容生成模拟情感得分
+                let score = 0.5; // 默认中性
+                
+                if (text.includes('出色') || text.includes('满足') || text.includes('好') || text.includes('优秀') || text.includes('满意')) {
+                    score = 0.85; // 正面
+                } else if (text.includes('慢') || text.includes('差') || text.includes('不满') || text.includes('失望') || text.includes('问题')) {
+                    score = 0.2; // 负面
+                } else if (text.includes('一般') || text.includes('还行') || text.includes('不错') || text.includes('可以')) {
+                    score = 0.52; // 中性偏正面
+                }
+                
+                // 更新情感得分和分类
+                updateSentimentResult(score);
+                
+                // 提取关键词
+                extractKeywords(text);
+                
+                // 初始化情感趋势图
+                initSentimentTrendChart(score);
+                
+            }, 1500);
+        });
+
+        // 更新情感分析结果
+        function updateSentimentResult(score) {
+            // 计算各类情感百分比
+            let positive = 0, neutral = 0, negative = 0;
+            
+            if (score >= 0.7) {
+                positive = score * 100;
+                neutral = (1 - score) * 50;
+                negative = (1 - score) * 50;
+                sentimentPositive.classList.add('bg-green-50');
+                sentimentNeutral.classList.remove('bg-blue-50');
+                sentimentNegative.classList.remove('bg-red-50');
+            } else if (score <= 0.3) {
+                negative = (1 - score) * 100;
+                neutral = score * 50;
+                positive = score * 50;
+                sentimentPositive.classList.remove('bg-green-50');
+                sentimentNeutral.classList.remove('bg-blue-50');
+                sentimentNegative.classList.add('bg-red-50');
+            } else {
+                neutral = 100 - Math.abs(score - 0.5) * 200;
+                positive = (score - 0.5) * 100 + 50;
+                negative = (0.5 - score) * 100 + 50;
+                sentimentPositive.classList.remove('bg-green-50');
+                sentimentNeutral.classList.add('bg-blue-50');
+                sentimentNegative.classList.remove('bg-red-50');
+            }
+            
+            // 更新UI
+            sentimentPositive.querySelector('div:first-child').textContent = `${Math.round(positive)}%`;
+            sentimentNeutral.querySelector('div:first-child').textContent = `${Math.round(neutral)}%`;
+            sentimentNegative.querySelector('div:first-child').textContent = `${Math.round(negative)}%`;
+            
+            // 更新情感得分条
+            sentimentScoreBar.style.width = `${score * 100}%`;
+            sentimentScoreValue.textContent = score.toFixed(2);
+        }
+
+        // 提取关键词
+        function extractKeywords(text) {
+            // 清空现有关键词
+            keywords.innerHTML = '';
+            
+            // 简单的关键词提取逻辑
+            const commonKeywords = ['新能源', '续航', '充电', '智能驾驶', '价格', '设计', '安全', '性能', '电池', '速度'];
+            const extractedKeywords = [];
+            
+            commonKeywords.forEach(keyword => {
+                if (text.includes(keyword)) {
+                    extractedKeywords.push(keyword);
+                }
+            });
+            
+            // 如果没有匹配到关键词，添加一些默认关键词
+            if (extractedKeywords.length === 0) {
+                extractedKeywords.push('新能源汽车', '用户体验', '产品评价');
+            }
+            
+            // 最多显示5个关键词
+            const displayKeywords = extractedKeywords.slice(0, 5);
+            
+            // 添加关键词标签
+            displayKeywords.forEach(keyword => {
+                const tag = document.createElement('span');
+                tag.className = 'px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full';
+                tag.textContent = keyword;
+                keywords.appendChild(tag);
+            });
+        }
+
+        // 初始化情感趋势图
+        function initSentimentTrendChart(currentScore) {
+            const ctx = document.getElementById('sentimentTrendChart').getContext('2d');
+            
+            // 生成过去7天的模拟数据
+            const dates = [];
+            const scores = [];
+            
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                dates.push(`${date.getMonth() + 1}/${date.getDate()}`);
+                
+                // 生成围绕当前得分的随机波动数据
+                const baseScore = Math.max(0, Math.min(1, currentScore + (Math.random() - 0.5) * 0.3));
+                scores.push(parseFloat(baseScore.toFixed(2)));
+            }
+            
+            // 创建或更新图表
+            if (window.sentimentTrendChart) {
+                window.sentimentTrendChart.data.labels = dates;
+                window.sentimentTrendChart.data.datasets[0].data = scores;
+                window.sentimentTrendChart.update();
+            } else {
+                window.sentimentTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: '情感得分',
+                            data: scores,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#3b82f6',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `情感得分: ${context.raw}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 1,
+                                ticks: {
+                                    stepSize: 0.2
+                                },
+                                grid: {
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // 批量分析模态框控制
+        batchAnalysisBtn.addEventListener('click', () => {
+            batchAnalysisModal.classList.remove('hidden');
+        });
+
+        closeBatchAnalysisModal.addEventListener('click', () => {
+            batchAnalysisModal.classList.add('hidden');
+        });
+
+        cancelBatchAnalysis.addEventListener('click', () => {
+            batchAnalysisModal.classList.add('hidden');
+        });
+
+        // 开始批量分析
+        startBatchAnalysis.addEventListener('click', () => {
+            batchAnalysisModal.classList.add('hidden');
+            batchProgressModal.classList.remove('hidden');
+            
+            // 模拟进度条
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                batchProgress.style.width = `${progress}%`;
+                batchProgressText.textContent = `${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        batchProgressModal.classList.add('hidden');
+                        alert('批量分析已完成，可在批量分析区域查看结果');
+                    }, 500);
+                }
+            }, 150);
+        });
+
+        cancelBatchProgress.addEventListener('click', () => {
+            batchProgressModal.classList.add('hidden');
+        });
+
+        // 点击模态框外部关闭模态框
+        window.addEventListener('click', (e) => {
+            if (e.target === batchAnalysisModal) {
+                batchAnalysisModal.classList.add('hidden');
+            }
+            if (e.target === batchProgressModal) {
+                batchProgressModal.classList.add('hidden');
+            }
+        });
+
+        // 检查URL参数，确定用户角色
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role');
+        
+        if (role === 'user') {
+            // 隐藏管理员专属菜单
+            document.querySelectorAll('a:has(.fa-cogs), a:has(.fa-users)').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // 更新用户菜单显示
+            document.querySelector('#userMenuButton span.hidden').textContent = '普通用户';
+        }
+    </script>
+</body>
+</html>

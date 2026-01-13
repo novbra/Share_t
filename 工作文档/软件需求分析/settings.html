@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新能源汽车舆情分析系统 - 系统设置</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        accent: '#0ea5e9',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        neutral: '#f1f5f9',
+                        'neutral-dark': '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .transition-all-300 {
+                transition: all 300ms ease-in-out;
+            }
+            .sidebar-active {
+                @apply bg-secondary text-white;
+            }
+            .sidebar-icon {
+                @apply mr-3 text-lg;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="flex items-center justify-between px-4 py-3">
+            <!-- 左侧Logo和标题 -->
+            <div class="flex items-center space-x-4">
+                <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-primary focus:outline-none">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center">
+                    <img src="https://p3-doubao-search-sign.byteimg.com/labis/97275f7dbcab7d29338c0f8d5e81b820~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1779511019&x-signature=S8QuGT9saJ1zXQ4CfOvu5tk%2Bbpg%3D" alt="Logo" class="h-10 w-10 rounded-full">
+                    <h1 class="ml-2 text-xl font-bold text-primary hidden sm:block">新能源汽车舆情分析系统</h1>
+                </div>
+            </div>
+
+            <!-- 中间搜索栏 -->
+            <div class="hidden md:flex flex-1 max-w-xl mx-4">
+                <div class="relative w-full">
+                    <input type="text" placeholder="搜索舆情信息、关键词..." 
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                        <i class="fa fa-search"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- 右侧用户菜单 -->
+            <div class="flex items-center space-x-4">
+                <!-- 通知图标 -->
+                <button class="relative text-gray-600 hover:text-primary focus:outline-none">
+                    <i class="fa fa-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                </button>
+
+                <!-- 用户下拉菜单 -->
+                <div class="relative">
+                    <button id="userMenuButton" class="flex items-center space-x-2 focus:outline-none">
+                        <div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <span class="hidden md:block text-gray-700">管理员</span>
+                        <i class="fa fa-chevron-down text-xs text-gray-500"></i>
+                    </button>
+
+                    <!-- 用户下拉菜单内容 -->
+                    <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 hidden">
+                        <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-user-circle mr-2"></i>个人资料
+                        </a>
+                        <a href="settings.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-cog mr-2"></i>设置
+                        </a>
+                        <div class="border-t border-gray-100 my-1"></div>
+                        <a href="login.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fa fa-sign-out mr-2"></i>退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="bg-white shadow-sm w-64 flex-shrink-0 hidden lg:block transition-all duration-300 ease-in-out">
+            <nav class="mt-5 px-2">
+                <div class="space-y-1">
+                    <!-- 仪表盘 -->
+                    <a href="index.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-dashboard sidebar-icon"></i>
+                        仪表盘
+                    </a>
+
+                    <!-- 情感分析 -->
+                    <a href="sentiment.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-heart sidebar-icon"></i>
+                        情感分析
+                    </a>
+
+                    <!-- 主题建模 -->
+                    <a href="topic.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-tags sidebar-icon"></i>
+                        主题建模
+                    </a>
+
+                    <!-- 报告生成 -->
+                    <a href="#report" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-file-text sidebar-icon"></i>
+                        报告生成
+                    </a>
+
+                    <!-- 搜索与查询 -->
+                    <a href="#search" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-search sidebar-icon"></i>
+                        搜索与查询
+                    </a>
+
+                    <!-- 数据采集配置 (管理员专属) -->
+                    <a href="data-collection.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-cogs sidebar-icon"></i>
+                        数据采集配置
+                        <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">管理员</span>
+                    </a>
+
+                    <!-- 用户管理 (管理员专属) -->
+                    <a href="user-management.html" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-users sidebar-icon"></i>
+                        用户管理
+                        <span class="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2 py-0.5 rounded">管理员</span>
+                    </a>
+
+                    <!-- 系统设置 -->
+                    <a href="settings.html" class="sidebar-active group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                        <i class="fa fa-sliders sidebar-icon"></i>
+                        系统设置
+                    </a>
+                </div>
+
+                <!-- 数据源状态 -->
+                <div class="mt-8">
+                    <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        数据源状态
+                    </h3>
+                    <div class="mt-2 space-y-1">
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            微博API
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            微信公众平台
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500 mr-3"></span>
+                            新闻RSS
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-red-500 mr-3"></span>
+                            论坛数据
+                        </a>
+                        <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+                            <span class="w-2 h-2 rounded-full bg-green-500 mr-3"></span>
+                            视频平台评论
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
+            <!-- 面包屑导航 -->
+            <div class="flex items-center text-sm text-gray-600 mb-6">
+                <a href="index.html" class="hover:text-primary">首页</a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-800">系统设置</span>
+            </div>
+
+            <!-- 页面标题 -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">系统设置</h2>
+                <div class="mt-4 md:mt-0">
+                    <button id="saveSettings" class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary flex items-center">
+                        <i class="fa fa-save mr-2"></i>
+                        保存设置
+                    </button>
+                </div>
+            </div>
+
+            <!-- 设置内容 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 仪表盘内容配置 -->
+                <div class="bg-white rounded-lg shadow-card p-6">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">仪表盘内容配置</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showSentimentChart" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                            <label for="showSentimentChart" class="ml-2 text-gray-700">显示情感分布图表</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showTrendChart" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                            <label for="showTrendChart" class="ml-2 text-gray-700">显示舆情趋势图表</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showHotTopics" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                            <label for="showHotTopics" class="ml-2 text-gray-700">显示热点话题排行榜</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showKeywords" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                            <label for="showKeywords" class="ml-2 text-gray-700">显示热门关键词</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showOverviewCards" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                            <label for="showOverviewCards" class="ml-2 text-gray-700">显示数据概览卡片</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据刷新频率设置 -->
+                <div class="bg-white rounded-lg shadow-card p-6">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">数据刷新频率设置</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="dashboardRefresh" class="block text-sm font-medium text-gray-700 mb-2">仪表盘自动刷新</label>
+                            <select id="dashboardRefresh" class="block w-full appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                <option value="0">不自动刷新</option>
+                                <option value="30">每30秒</option>
+                                <option value="60" selected>每1分钟</option>
+                                <option value="300">每5分钟</option>
+                                <option value="600">每10分钟</option>
+                                <option value="1800">每30分钟</option>
+                                <option value="3600">每小时</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="dataUpdate" class="block text-sm font-medium text-gray-700 mb-2">数据更新频率</label>
+                            <select id="dataUpdate" class="block w-full appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                <option value="300">每5分钟</option>
+                                <option value="600">每10分钟</option>
+                                <option value="1800">每30分钟</option>
+                                <option value="3600" selected>每小时</option>
+                                <option value="7200">每2小时</option>
+                                <option value="86400">每天</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="autoRefreshCharts" class="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                            <label for="autoRefreshCharts" class="ml-2 text-gray-700">图表数据自动刷新</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主题颜色选择 -->
+                <div class="bg-white rounded-lg shadow-card p-6 lg:col-span-2">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">主题颜色选择</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">主色调</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <button class="theme-color-btn w-full h-12 rounded-lg border-2 border-primary bg-primary flex items-center justify-center text-white font-medium" data-color="#1e40af">
+                                    <i class="fa fa-check mr-2"></i>蓝色
+                                </button>
+                                <button class="theme-color-btn w-full h-12 rounded-lg border-2 border-transparent bg-green-600 flex items-center justify-center text-white font-medium hover:border-green-600" data-color="#10b981">
+                                    绿色
+                                </button>
+                                <button class="theme-color-btn w-full h-12 rounded-lg border-2 border-transparent bg-purple-600 flex items-center justify-center text-white font-medium hover:border-purple-600" data-color="#8b5cf6">
+                                    紫色
+                                </button>
+                                <button class="theme-color-btn w-full h-12 rounded-lg border-2 border-transparent bg-orange-600 flex items-center justify-center text-white font-medium hover:border-orange-600" data-color="#f97316">
+                                    橙色
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">界面模式</label>
+                            <div class="flex space-x-4">
+                                <button class="theme-mode-btn px-6 py-3 rounded-lg border-2 border-primary bg-white text-primary font-medium flex items-center" data-mode="light">
+                                    <i class="fa fa-sun-o mr-2"></i>浅色模式
+                                </button>
+                                <button class="theme-mode-btn px-6 py-3 rounded-lg border-2 border-transparent bg-gray-800 text-white font-medium flex items-center hover:border-gray-800" data-mode="dark">
+                                    <i class="fa fa-moon-o mr-2"></i>深色模式
+                                </button>
+                                <button class="theme-mode-btn px-6 py-3 rounded-lg border-2 border-transparent bg-gray-200 text-gray-800 font-medium flex items-center hover:border-gray-400" data-mode="auto">
+                                    <i class="fa fa-adjust mr-2"></i>自动模式
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户管理 (管理员专属) -->
+                <div class="bg-white rounded-lg shadow-card p-6 lg:col-span-2">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-800">用户管理</h3>
+                            <p class="text-sm text-gray-500 mt-1">管理系统用户，分配角色和权限</p>
+                        </div>
+                        <div class="mt-4 md:mt-0">
+                            <button id="addUserBtn" class="bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary flex items-center">
+                                <i class="fa fa-plus mr-2"></i>
+                                添加新用户
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 用户列表 -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        用户名
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        姓名
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        邮箱
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        角色
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        状态
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        创建时间
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        操作
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- 示例用户1 -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
+                                                <i class="fa fa-user"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">admin</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">系统管理员</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">admin@example.com</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                            管理员
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            启用
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">2023-01-01</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-primary hover:text-secondary mr-3 edit-user" data-user-id="1">
+                                            <i class="fa fa-edit"></i> 编辑
+                                        </button>
+                                        <button class="text-gray-500 hover:text-gray-700 disable-user" data-user-id="1" disabled>
+                                            <i class="fa fa-ban"></i> 禁用
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- 示例用户2 -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center">
+                                                <i class="fa fa-user"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">user1</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">张三</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">zhangsan@example.com</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            普通用户
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            启用
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">2023-01-02</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-primary hover:text-secondary mr-3 edit-user" data-user-id="2">
+                                            <i class="fa fa-edit"></i> 编辑
+                                        </button>
+                                        <button class="text-gray-500 hover:text-gray-700 disable-user" data-user-id="2">
+                                            <i class="fa fa-ban"></i> 禁用
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- 示例用户3 -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="h-8 w-8 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center">
+                                                <i class="fa fa-user"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">user2</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">李四</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">lisi@example.com</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            普通用户
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                            禁用
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-500">2023-01-03</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-primary hover:text-secondary mr-3 edit-user" data-user-id="3">
+                                            <i class="fa fa-edit"></i> 编辑
+                                        </button>
+                                        <button class="text-green-500 hover:text-green-700 enable-user" data-user-id="3">
+                                            <i class="fa fa-check"></i> 启用
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 用户管理模态框 -->
+    <div id="userModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="userModalTitle" class="text-lg font-medium text-gray-800">添加新用户</h3>
+                <button id="closeUserModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- 用户表单 -->
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                
+                <div class="mb-4">
+                    <label for="userName" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                    <input type="text" id="userName" name="userName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="输入用户名" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="realName" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                    <input type="text" id="realName" name="realName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="输入真实姓名" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="userEmail" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                    <input type="email" id="userEmail" name="userEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="输入邮箱地址" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="userPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                    <input type="password" id="userPassword" name="userPassword" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="输入密码">
+                    <p id="passwordHint" class="text-xs text-gray-500 mt-1">编辑用户时可留空不修改密码</p>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="userRole" class="block text-sm font-medium text-gray-700 mb-1">角色</label>
+                    <select id="userRole" name="userRole" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                        <option value="user">普通用户</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelUserAction" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        取消
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 侧边栏切换
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        });
+
+        // 用户菜单切换
+        document.getElementById('userMenuButton').addEventListener('click', function() {
+            document.getElementById('userMenu').classList.toggle('hidden');
+        });
+
+        // 点击外部关闭用户菜单
+        document.addEventListener('click', function(e) {
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userMenu = document.getElementById('userMenu');
+            if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // 主题颜色选择
+        const themeColorButtons = document.querySelectorAll('.theme-color-btn');
+        themeColorButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // 移除所有按钮的选中状态
+                themeColorButtons.forEach(btn => {
+                    btn.classList.remove('border-primary', 'border-2');
+                    btn.classList.add('border-transparent');
+                    btn.innerHTML = btn.innerHTML.replace('<i class="fa fa-check mr-2"></i>', '');
+                });
+                // 添加当前按钮的选中状态
+                this.classList.remove('border-transparent');
+                this.classList.add('border-2', 'border-primary');
+                this.innerHTML = '<i class="fa fa-check mr-2"></i>' + this.innerHTML;
+                
+                // 这里可以添加切换主题颜色的逻辑
+                const color = this.dataset.color;
+                console.log('切换主色调为:', color);
+            });
+        });
+
+        // 界面模式选择
+        const themeModeButtons = document.querySelectorAll('.theme-mode-btn');
+        themeModeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // 移除所有按钮的选中状态
+                themeModeButtons.forEach(btn => {
+                    btn.classList.remove('border-primary', 'bg-primary', 'text-white');
+                    btn.classList.add('border-transparent');
+                    if (btn.dataset.mode === 'light') {
+                        btn.classList.add('bg-white', 'text-primary');
+                    } else if (btn.dataset.mode === 'dark') {
+                        btn.classList.add('bg-gray-800', 'text-white');
+                    } else {
+                        btn.classList.add('bg-gray-200', 'text-gray-800');
+                    }
+                });
+                // 添加当前按钮的选中状态
+                this.classList.remove('border-transparent', 'bg-white', 'text-primary', 'bg-gray-800', 'text-white', 'bg-gray-200', 'text-gray-800');
+                this.classList.add('border-2', 'border-primary', 'bg-primary', 'text-white');
+                
+                // 这里可以添加切换界面模式的逻辑
+                const mode = this.dataset.mode;
+                console.log('切换界面模式为:', mode);
+            });
+        });
+
+        // 用户管理功能
+        // 模拟用户数据
+        let users = [
+            { id: 1, userName: 'admin', realName: '系统管理员', email: 'admin@example.com', role: 'admin', status: 'enabled', createTime: '2023-01-01' },
+            { id: 2, userName: 'user1', realName: '张三', email: 'zhangsan@example.com', role: 'user', status: 'enabled', createTime: '2023-01-02' },
+            { id: 3, userName: 'user2', realName: '李四', email: 'lisi@example.com', role: 'user', status: 'disabled', createTime: '2023-01-03' }
+        ];
+
+        // 获取DOM元素
+        const userModal = document.getElementById('userModal');
+        const userModalTitle = document.getElementById('userModalTitle');
+        const userForm = document.getElementById('userForm');
+        const userId = document.getElementById('userId');
+        const userName = document.getElementById('userName');
+        const realName = document.getElementById('realName');
+        const userEmail = document.getElementById('userEmail');
+        const userPassword = document.getElementById('userPassword');
+        const userRole = document.getElementById('userRole');
+        const passwordHint = document.getElementById('passwordHint');
+        const addUserBtn = document.getElementById('addUserBtn');
+        const closeUserModal = document.getElementById('closeUserModal');
+        const cancelUserAction = document.getElementById('cancelUserAction');
+
+        // 打开添加用户模态框
+        addUserBtn.addEventListener('click', function() {
+            userModalTitle.textContent = '添加新用户';
+            userForm.reset();
+            userId.value = '';
+            passwordHint.style.display = 'none';
+            userPassword.required = true;
+            userModal.classList.remove('hidden');
+        });
+
+        // 关闭模态框
+        function closeModal() {
+            userModal.classList.add('hidden');
+        }
+
+        closeUserModal.addEventListener('click', closeModal);
+        cancelUserAction.addEventListener('click', closeModal);
+
+        // 点击外部关闭模态框
+        window.addEventListener('click', function(e) {
+            if (e.target === userModal) {
+                closeModal();
+            }
+        });
+
+        // 提交用户表单
+        userForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userData = {
+                userName: userName.value,
+                realName: realName.value,
+                email: userEmail.value,
+                role: userRole.value
+            };
+
+            // 如果有密码则添加到数据中
+            if (userPassword.value) {
+                userData.password = userPassword.value;
+            }
+
+            if (userId.value) {
+                // 编辑现有用户
+                const index = users.findIndex(u => u.id === parseInt(userId.value));
+                if (index !== -1) {
+                    users[index] = { ...users[index], ...userData };
+                    console.log('更新用户:', users[index]);
+                    updateUserRow(users[index]);
+                }
+            } else {
+                // 添加新用户
+                const newUser = {
+                    id: Date.now(), // 使用时间戳作为临时ID
+                    ...userData,
+                    status: 'enabled',
+                    createTime: new Date().toISOString().split('T')[0]
+                };
+                users.push(newUser);
+                console.log('添加新用户:', newUser);
+                addUserRow(newUser);
+            }
+
+            closeModal();
+        });
+
+        // 添加用户到表格
+        function addUserRow(user) {
+            const tbody = document.querySelector('tbody');
+            const row = document.createElement('tr');
+            
+            const roleText = user.role === 'admin' ? '管理员' : '普通用户';
+            const roleColor = user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800';
+            
+            const statusText = user.status === 'enabled' ? '启用' : '禁用';
+            const statusColor = user.status === 'enabled' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+            
+            const actionButtons = user.status === 'enabled' 
+                ? `<button class="text-primary hover:text-secondary mr-3 edit-user" data-user-id="${user.id}"><i class="fa fa-edit"></i> 编辑</button><button class="text-gray-500 hover:text-gray-700 disable-user" data-user-id="${user.id}"><i class="fa fa-ban"></i> 禁用</button>`
+                : `<button class="text-primary hover:text-secondary mr-3 edit-user" data-user-id="${user.id}"><i class="fa fa-edit"></i> 编辑</button><button class="text-green-500 hover:text-green-700 enable-user" data-user-id="${user.id}"><i class="fa fa-check"></i> 启用</button>`;
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="h-8 w-8 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-sm font-medium text-gray-900">${user.userName}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${user.realName}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${user.email}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${roleColor}">
+                        ${roleText}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">
+                        ${statusText}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-500">${user.createTime}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    ${actionButtons}
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+            
+            // 为新添加的按钮绑定事件
+            bindUserActionButtons();
+        }
+
+        // 更新表格中的用户行
+        function updateUserRow(user) {
+            const row = document.querySelector(`[data-user-id="${user.id}"]`).closest('tr');
+            if (row) {
+                const roleText = user.role === 'admin' ? '管理员' : '普通用户';
+                const roleColor = user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800';
+                
+                const statusText = user.status === 'enabled' ? '启用' : '禁用';
+                const statusColor = user.status === 'enabled' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                
+                const actionButtons = user.status === 'enabled' 
+                    ? `<button class="text-primary hover:text-secondary mr-3 edit-user" data-user-id="${user.id}"><i class="fa fa-edit"></i> 编辑</button><button class="text-gray-500 hover:text-gray-700 disable-user" data-user-id="${user.id}"><i class="fa fa-ban"></i> 禁用</button>`
+                    : `<button class="text-primary hover:text-secondary mr-3 edit-user" data-user-id="${user.id}"><i class="fa fa-edit"></i> 编辑</button><button class="text-green-500 hover:text-green-700 enable-user" data-user-id="${user.id}"><i class="fa fa-check"></i> 启用</button>`;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-8 w-8 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center">
+                                <i class="fa fa-user"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${user.userName}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.realName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${user.email}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${roleColor}">
+                            ${roleText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${user.createTime}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        ${actionButtons}
+                    </td>
+                `;
+            }
+        }
+
+        // 绑定用户操作按钮事件
+        function bindUserActionButtons() {
+            // 编辑用户
+            document.querySelectorAll('.edit-user').forEach(button => {
+                button.addEventListener('click', function() {
+                    const userIdVal = parseInt(this.dataset.userId);
+                    const user = users.find(u => u.id === userIdVal);
+                    if (user) {
+                        userModalTitle.textContent = '编辑用户';
+                        userId.value = user.id;
+                        userName.value = user.userName;
+                        realName.value = user.realName;
+                        userEmail.value = user.email;
+                        userRole.value = user.role;
+                        userPassword.value = '';
+                        userPassword.required = false;
+                        passwordHint.style.display = 'block';
+                        userModal.classList.remove('hidden');
+                    }
+                });
+            });
+
+            // 禁用用户
+            document.querySelectorAll('.disable-user').forEach(button => {
+                button.addEventListener('click', function() {
+                    const userIdVal = parseInt(this.dataset.userId);
+                    const user = users.find(u => u.id === userIdVal);
+                    if (user && confirm(`确定要禁用用户 ${user.userName} 吗？`)) {
+                        user.status = 'disabled';
+                        updateUserRow(user);
+                        console.log('禁用用户:', user);
+                    }
+                });
+            });
+
+            // 启用用户
+            document.querySelectorAll('.enable-user').forEach(button => {
+                button.addEventListener('click', function() {
+                    const userIdVal = parseInt(this.dataset.userId);
+                    const user = users.find(u => u.id === userIdVal);
+                    if (user && confirm(`确定要启用用户 ${user.userName} 吗？`)) {
+                        user.status = 'enabled';
+                        updateUserRow(user);
+                        console.log('启用用户:', user);
+                    }
+                });
+            });
+        }
+
+        // 初始绑定按钮事件
+        bindUserActionButtons();
+
+        // 保存设置
+        document.getElementById('saveSettings').addEventListener('click', function() {
+            // 收集设置
+            const settings = {
+                dashboardContent: {
+                    showSentimentChart: document.getElementById('showSentimentChart').checked,
+                    showTrendChart: document.getElementById('showTrendChart').checked,
+                    showHotTopics: document.getElementById('showHotTopics').checked,
+                    showKeywords: document.getElementById('showKeywords').checked,
+                    showOverviewCards: document.getElementById('showOverviewCards').checked
+                },
+                refreshFrequency: {
+                    dashboard: document.getElementById('dashboardRefresh').value,
+                    data: document.getElementById('dataUpdate').value,
+                    autoRefreshCharts: document.getElementById('autoRefreshCharts').checked
+                },
+                theme: {
+                    color: document.querySelector('.theme-color-btn.border-primary').dataset.color,
+                    mode: document.querySelector('.theme-mode-btn.border-primary').dataset.mode
+                },
+                users: users // 添加用户数据到设置中
+            };
+            
+            console.log('保存的设置:', settings);
+            
+            // 显示保存成功提示
+            alert('设置已保存！');
+        });
+    </script>
+</body>
+</html>

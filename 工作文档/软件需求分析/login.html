@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新能源汽车舆情分析系统 - 登录</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        accent: '#0ea5e9',
+                        neutral: '#f1f5f9',
+                        'neutral-dark': '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .transition-all-300 {
+                transition: all 300ms ease-in-out;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- 左侧图片区域 -->
+        <div class="hidden md:flex md:w-1/2 bg-gradient-primary items-center justify-center p-8">
+            <div class="text-center text-white">
+                <h1 class="text-4xl md:text-5xl font-bold mb-6 text-shadow">新能源汽车舆情分析系统</h1>
+                <p class="text-xl mb-8 max-w-lg mx-auto">智能化、多维度的新能源汽车舆情监测与分析平台</p>
+                <div class="relative">
+                    <img src="https://p26-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/36835f148485435ebaed8684c0d0f3ec~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1779511019&x-signature=3a%2BPZHxh7Yxk4rjp%2FBn%2BH5O7ks8%3D" alt="新能源汽车" class="rounded-lg shadow-xl max-w-full h-auto mx-auto" style="max-height: 400px;">
+                    <div class="absolute -bottom-4 -right-4 bg-white p-4 rounded-lg shadow-lg">
+                        <p class="text-primary font-semibold">实时监测 · 智能分析 · 深度洞察</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧表单区域 -->
+        <div class="flex w-full md:w-1/2 items-center justify-center p-8">
+            <div class="w-full max-w-md">
+                <!-- 移动端Logo和标题 -->
+                <div class="md:hidden text-center mb-8">
+                    <h1 class="text-3xl font-bold text-primary mb-2">新能源汽车舆情分析系统</h1>
+                    <p class="text-gray-600">智能化、多维度的舆情监测与分析平台</p>
+                </div>
+
+                <!-- 登录表单卡片 -->
+                <div class="bg-white rounded-xl shadow-card p-8 mb-8 transition-all-300 hover:shadow-card-hover">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">欢迎登录</h2>
+                        <p class="text-gray-600 mt-2">请输入您的账号和密码</p>
+                    </div>
+
+                    <form id="loginForm" class="space-y-6">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                    <i class="fa fa-user"></i>
+                                </span>
+                                <input type="text" id="username" name="username" required 
+                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                                    placeholder="请输入用户名">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                    <i class="fa fa-lock"></i>
+                                </span>
+                                <input type="password" id="password" name="password" required 
+                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                                    placeholder="请输入密码">
+                                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-all-300">
+                                    <i class="fa fa-eye-slash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="remember" name="remember" 
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded transition-all-300">
+                                <label for="remember" class="ml-2 block text-sm text-gray-700">记住我</label>
+                            </div>
+                            <a href="#" id="forgotPassword" class="text-sm text-primary hover:text-secondary transition-all-300">忘记密码?</a>
+                        </div>
+
+                        <div>
+                            <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all-300 font-medium">
+                                登录
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-600">
+                            还没有账号? <a href="#" id="switchToRegister" class="font-medium text-primary hover:text-secondary transition-all-300">立即注册</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 快速登录选项 -->
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-4">或使用以下方式快速登录</p>
+                    <div class="flex justify-center space-x-4">
+                        <button type="button" class="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all-300">
+                            <i class="fa fa-weixin text-xl"></i>
+                        </button>
+                        <button type="button" class="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all-300">
+                            <i class="fa fa-qq text-xl"></i>
+                        </button>
+                        <button type="button" class="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all-300">
+                            <i class="fa fa-weibo text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册表单模态框 -->
+    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">用户注册</h2>
+                <button id="closeRegisterModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="registerForm" class="space-y-6">
+                <div>
+                    <label for="regUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-user"></i>
+                        </span>
+                        <input type="text" id="regUsername" name="regUsername" required 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                            placeholder="请输入用户名">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="regEmail" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-envelope"></i>
+                        </span>
+                        <input type="email" id="regEmail" name="regEmail" required 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                            placeholder="请输入邮箱">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="regPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-lock"></i>
+                        </span>
+                        <input type="password" id="regPassword" name="regPassword" required 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                            placeholder="请输入密码">
+                        <button type="button" id="toggleRegPassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-primary transition-all-300">
+                            <i class="fa fa-eye-slash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="regConfirmPassword" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-lock"></i>
+                        </span>
+                        <input type="password" id="regConfirmPassword" name="regConfirmPassword" required 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                            placeholder="请再次输入密码">
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="terms" name="terms" required 
+                        class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded transition-all-300">
+                    <label for="terms" class="ml-2 block text-sm text-gray-700">
+                        我已阅读并同意 <a href="#" class="text-primary hover:text-secondary transition-all-300">用户协议</a> 和 <a href="#" class="text-primary hover:text-secondary transition-all-300">隐私政策</a>
+                    </label>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all-300 font-medium">
+                        注册
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 忘记密码模态框 -->
+    <div id="forgotPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">忘记密码</h2>
+                <button id="closeForgotPasswordModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="forgotPasswordForm" class="space-y-6">
+                <p class="text-gray-600">请输入您的邮箱，我们将发送重置密码的链接到您的邮箱</p>
+
+                <div>
+                    <label for="forgotEmail" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            <i class="fa fa-envelope"></i>
+                        </span>
+                        <input type="email" id="forgotEmail" name="forgotEmail" required 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300"
+                            placeholder="请输入邮箱">
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all-300 font-medium">
+                        发送重置链接
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 成功提示模态框 -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa fa-check text-green-500 text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">操作成功</h2>
+            <p id="successMessage" class="text-gray-600 mb-6">您的请求已成功处理</p>
+            <button id="closeSuccessModal" class="bg-primary text-white py-2 px-6 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all-300 font-medium">
+                确定
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM元素
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const togglePassword = document.getElementById('togglePassword');
+        const toggleRegPassword = document.getElementById('toggleRegPassword');
+        const passwordInput = document.getElementById('password');
+        const regPasswordInput = document.getElementById('regPassword');
+        const switchToRegister = document.getElementById('switchToRegister');
+        const registerModal = document.getElementById('registerModal');
+        const closeRegisterModal = document.getElementById('closeRegisterModal');
+        const forgotPassword = document.getElementById('forgotPassword');
+        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+        const closeForgotPasswordModal = document.getElementById('closeForgotPasswordModal');
+        const successModal = document.getElementById('successModal');
+        const closeSuccessModal = document.getElementById('closeSuccessModal');
+        const successMessage = document.getElementById('successMessage');
+
+        // 切换密码可见性
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            togglePassword.innerHTML = type === 'password' ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+        });
+
+        toggleRegPassword.addEventListener('click', () => {
+            const type = regPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            regPasswordInput.setAttribute('type', type);
+            toggleRegPassword.innerHTML = type === 'password' ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+        });
+
+        // 模态框控制
+        switchToRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerModal.classList.remove('hidden');
+        });
+
+        closeRegisterModal.addEventListener('click', () => {
+            registerModal.classList.add('hidden');
+        });
+
+        forgotPassword.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotPasswordModal.classList.remove('hidden');
+        });
+
+        closeForgotPasswordModal.addEventListener('click', () => {
+            forgotPasswordModal.classList.add('hidden');
+        });
+
+        closeSuccessModal.addEventListener('click', () => {
+            successModal.classList.add('hidden');
+        });
+
+        // 表单提交处理
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // 简单的验证
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+            
+            // 模拟登录成功，根据用户名判断角色
+            // 这里使用简单的判断：admin用户跳转到管理员页面，其他用户跳转到普通用户页面
+            if (username === 'admin') {
+                window.location.href = 'index.html?role=admin';
+            } else {
+                window.location.href = 'index.html?role=user';
+            }
+        });
+
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            
+            // 简单的验证
+            if (!username || !email || !password || !confirmPassword) {
+                alert('请填写所有必填字段');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('两次输入的密码不一致');
+                return;
+            }
+            
+            // 模拟注册成功
+            successMessage.textContent = '注册成功，请登录';
+            successModal.classList.remove('hidden');
+            registerModal.classList.add('hidden');
+            registerForm.reset();
+        });
+
+        forgotPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            
+            // 简单的验证
+            if (!email) {
+                alert('请输入邮箱');
+                return;
+            }
+            
+            // 模拟发送重置链接
+            successMessage.textContent = '重置密码链接已发送到您的邮箱，请查收';
+            successModal.classList.remove('hidden');
+            forgotPasswordModal.classList.add('hidden');
+            forgotPasswordForm.reset();
+        });
+
+        // 点击模态框外部关闭模态框
+        window.addEventListener('click', (e) => {
+            if (e.target === registerModal) {
+                registerModal.classList.add('hidden');
+            }
+            if (e.target === forgotPasswordModal) {
+                forgotPasswordModal.classList.add('hidden');
+            }
+            if (e.target === successModal) {
+                successModal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
